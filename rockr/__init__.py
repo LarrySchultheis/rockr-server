@@ -1,6 +1,7 @@
 import os, json
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from rockr import auth, users, bands
 
 def format_response(status, data):
@@ -9,6 +10,7 @@ def format_response(status, data):
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
     # Don't need below quite yet
     # app.config.from_mapping(
     #     SECRET_KEY='dev',
@@ -61,5 +63,9 @@ def create_app(test_config=None):
     def getBands():
         data = bands.get_bands()
         return format_response(200, data)
-
+    
+    @app.route('/getUserRole', methods=["POST"])
+    def getUserRole():
+        data = users.get_user_role(request.json)
+        return format_response(200, data)
     return app
