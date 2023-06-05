@@ -62,4 +62,24 @@ def create_app(test_config=None):
         data = bands.get_bands()
         return format_response(200, data)
 
+    @app.route('/getUserNames', methods=["GET"])
+    def getUserNames():
+        data = users.getUserNames()
+        return format_response(200, data)
+    
+    @app.route('/getLocation', methods=["GET"])
+    def getLocation():
+        data = users.getlocation()
+        return format_response(200, data)
+    
+    @app.route('/getInstruments', methods=["GET"])
+    def getInstruments():
+        data = users.getInstrument()
+        return format_response(200, data)
+    
+    @app.route('/get_Music_specialties', methods=["GET"])
+    def get_Music_specialties():
+        data = users.get_Music_specialties()
+        return format_response(200, data)
+
     return app
