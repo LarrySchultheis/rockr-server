@@ -9,3 +9,6 @@
 ```python3 -m venv .venv```
 ```. .venv/bin/activate```
 ```pip install Flask```
+
+### To run debug mode:
+```flask --app rockr run --debug```
