@@ -30,4 +30,6 @@ jobs:
       run: |        
         touch settings.py
         echo "$SETTINGS" > settings.py
+        ls
+        cat settings.py
         pytest -v
