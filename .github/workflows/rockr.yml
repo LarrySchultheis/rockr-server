@@ -28,5 +28,6 @@ jobs:
       run: | 
         cd rockr
         echo ${{secrets.SETTINGS}} | base64 -d > settings.py
+        cat settings.py
         cd ..
         pytest -v
