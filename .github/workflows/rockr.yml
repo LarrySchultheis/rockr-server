@@ -27,8 +27,6 @@ jobs:
     - name: Test with pytest
       run: | 
         cd rockr
-        'cat $SETTINGS | base64 -d > settings.py'
+        'echo ${{secrets.SETTINGS}} | base64 -d > settings.py'
         cd ..
         pytest -v
-      env: |
-        SETTINGS: ${{secrets.SETTINGS}}
