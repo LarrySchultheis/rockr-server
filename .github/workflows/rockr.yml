@@ -29,6 +29,5 @@ jobs:
     - name: Test with pytest
       run: |        
         touch settings.py
-        echo "$SETTINGS"
-        echo "$SETTINGS" > rockr/settings.py
+        'echo "$SETTINGS" > rockr/settings.py'
         pytest -v
