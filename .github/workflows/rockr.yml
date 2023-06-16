@@ -21,11 +21,13 @@ jobs:
         python-version: "3.10"
     - name: Install dependencies
       run: |
+        touch settings.py
+        echo "$SETTINGS" > settings.py
         python -m pip install --upgrade pip
         pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        touch settings.py
-        echo {{ secrets.SETTINGS }} > settings.py
+      env:
+        SETTINGS: ${{ secrets.SETTINGS }}
     - name: Test with pytest
       run: |
         pytest -v
