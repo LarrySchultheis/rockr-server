@@ -28,7 +28,5 @@ jobs:
         SETTINGS: ${{ secrets.SETTINGS }}
     - name: Test with pytest
       run: | 
-        cd rockr
-        'echo "$SETTINGS" > settings.py'
-        cd ..
+        'echo "$SETTINGS" | base64 -d > rockr/settings.py'
         pytest -v
