@@ -30,7 +30,4 @@ jobs:
       run: |        
         touch settings.py
         echo "$SETTINGS" > rockr/settings.py
-        cd rockr
-        ls
-        cat settings.py
         pytest -v
