@@ -28,6 +28,6 @@ jobs:
         SETTINGS: ${{ secrets.SETTINGS }}
     - name: Test with pytest
       run: |        
-        touch settings.py
+        touch rockr/settings.py
         'echo "$SETTINGS" > rockr/settings.py'
         pytest -v
