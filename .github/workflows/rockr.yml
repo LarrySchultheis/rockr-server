@@ -24,11 +24,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      env:
-        SETTINGS: ${{ secrets.SETTINGS }}
     - name: Test with pytest
       run: | 
         cd rockr
-        'echo "$SETTINGS" | base64 -d > settings.py'
+        'echo ${{ secrets.YOUR_SECRET }} | base64 -d > settings.py'
         cd ..
         pytest -v
