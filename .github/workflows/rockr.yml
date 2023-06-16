@@ -27,7 +27,7 @@ jobs:
       env:
         SETTINGS: ${{ secrets.SETTINGS }}
     - name: Test with pytest
-      run: |        
-        touch rockr/settings.py
+      run: |       
+        ls
         'echo "$SETTINGS" > rockr/settings.py'
         pytest -v
