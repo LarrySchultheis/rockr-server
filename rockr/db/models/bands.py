@@ -1,5 +1,6 @@
 import rockr.db.rockr_db_manager as db
 
+
 def get_bands():
     db_man = db.DbManager()
     cols = ['band_name', 'genre', 'members']

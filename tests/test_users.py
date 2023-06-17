@@ -1,4 +1,4 @@
-from rockr import users as usr
+from rockr.db.models import users as usr
 from rockr import settings
 
 def test_get_user(): 

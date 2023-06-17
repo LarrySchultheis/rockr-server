@@ -1,11 +1,6 @@
-import os, json
-
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-from rockr import auth, users, bands
 
-def format_response(status, data):
-    return {"status": status, "data": data}
 
 def create_app(test_config=None):
     # create and configure the app
@@ -30,42 +25,9 @@ def create_app(test_config=None):
     # except OSError:
     #     pass
 
-    # Example routing scheme. Let's keep grouped functionality in dedicated python files.
-    # This file should just be for kicking off logic based on http requests. Then our python files will 
-    # call functions to complete logic and return a relevant response. This file should handle just
-    # handle manipulating and routing
-
-    @app.route('/', methods=["GET"])
-    def index():
-        return "Welcome to Rockr!"
-
-    @app.route('/login', methods=["POST"])
-    def login():
-        data = auth.login(request.json)
-        return format_response(200, data)
-
-    @app.route('/logout')
-    def logout():
-        data = auth.logout(request.json)
-        return format_response(200, data)
-
-    @app.route('/register', methods =['POST'])
-    def register():
-        data = users.create_user(request.json)
-        return format_response(200, data)
-
-    @app.route('/getUsers', methods=["GET"])
-    def getUsers():
-        data = users.get_users()
-        return format_response(200, data)
-
-    @app.route('/getBands', methods=["GET"])
-    def getBands():
-        data = bands.get_bands()
-        return format_response(200, data)
-    
-    @app.route('/getUserRole', methods=["POST"])
-    def getUserRole():
-        data = users.get_user_role(request.json)
-        return format_response(200, data)
     return app
+
+
+app = create_app()
+
+import rockr.views

@@ -1,4 +1,5 @@
-from rockr import bands as bnds
+from rockr.db.models import bands as bnds
+
 
 def test_get_bands():
     bands = bnds.get_bands()

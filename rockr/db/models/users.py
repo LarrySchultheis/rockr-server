@@ -12,10 +12,12 @@ def get_users():
               cols[2]: r[2]} for r in res]
     return users
 
+
 # Get user permission level from Auth0
 def get_user_role(req):
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.get_user_role(req['user_id'])
+
 
 def register_user():
     return ''

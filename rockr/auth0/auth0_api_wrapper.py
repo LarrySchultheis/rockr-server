@@ -1,5 +1,8 @@
+import json
+import urllib3
+
 from rockr import settings
-import urllib3, json, http
+
 
 class Auth0ApiWrapper():
     def __init__(self):
