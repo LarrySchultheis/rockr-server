@@ -1,4 +1,5 @@
 import psycopg2
+import sqlalchemy
 from rockr import settings
 
 # Simple starter class to wrap psycopg2 commands for DB access
