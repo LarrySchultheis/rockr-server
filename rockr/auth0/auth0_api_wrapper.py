@@ -16,7 +16,7 @@ class Auth0ApiWrapper():
     def get_user_role(self, user_id):
         token = self._get_api_token()
         resp = self.http.request("GET",
-                                 f"{self.settings.API_TOKEN}/users/{user_id}/roles",
+                                 f"{self.settings.AUTH0_URL}/users/{user_id}/roles",
                                  headers={
                                      "Authorization": f"Bearer {token}"
                                  })
