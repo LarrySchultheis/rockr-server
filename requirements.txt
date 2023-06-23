@@ -19,3 +19,4 @@ tomli==2.0.1
 typing_extensions==4.6.3
 urllib3==1.26.6
 Werkzeug==2.3.6
+SQLAlchemy-serializer==1.4.1
