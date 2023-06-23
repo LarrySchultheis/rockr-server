@@ -1,5 +1,5 @@
 from flask import request
-from rockr import auth, app
+from rockr import auth, app, db
 from rockr.models import User
 
 
@@ -35,6 +35,16 @@ def get_users():
     data = User.get_users()
     return format_response(200, data)
 
+
+@app.route('/update_user_account', methods=["POST"])
+def update_user_account():
+    data = User.update_user_account(request.json)
+    return format_response(200, data)
+
+@app.route('/delete_user_account', methods=["GET"])
+def delete_user_accout():
+    data = User.delete_user_account(request.args.get("user_id"))
+    return format_response(200, data)
 
 @app.route('/get_bands', methods=["GET"])
 def get_bands():

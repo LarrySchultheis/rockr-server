@@ -6,7 +6,6 @@ from .settings import DATABASE_CONFIG
 
 db = SQLAlchemy()
 
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -18,6 +17,8 @@ def create_app(test_config=None):
     app.config["SQLALCHEMY_DATABASE_URI"] = url_object
     # print(engine)
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
     return app
 
