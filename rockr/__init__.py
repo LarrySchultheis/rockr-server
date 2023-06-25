@@ -10,13 +10,12 @@ db = SQLAlchemy()
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    CORS(app)
+    CORS(app, origins=["http://localhost:3000"])
 
     # CITE: https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/quickstart/
     # configure the database
     url_object = URL.create(**DATABASE_CONFIG)
     app.config["SQLALCHEMY_DATABASE_URI"] = url_object
-    # print(engine)
     db.init_app(app)
 
     return app
