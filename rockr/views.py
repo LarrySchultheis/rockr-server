@@ -26,8 +26,9 @@ def logout():
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = User.create_user(request.json)
-    return format_response(200, data)
+    user = User(email=request.json["data"]["email"])
+    db_manager.insert(user)
+    return format_response(200, user.to_dict())
 
 
 @app.route('/get_users', methods=["GET"])
