@@ -24,4 +24,11 @@ Branch off of development and merge into development. Team will merge developmen
 6. `git push --set-upstream origin ROC-00-name-of-feature`, if development has changed since feature branch was created: `git rebase development`, then rerun the previous command
 7. go to github and create a PR!
 
-
+### Database Migrations For All!
+Anytime you make a change to a model, you need to create a migration to persist your change to the db.
+1. remember to install from requirements.txt so you have `flaks-migrate`
+2. inside your venv run `export FLASK_APP=rockr.py` (you only need to do this the first time)
+3. run `flask db migrate`
+4. run `flask db upgrade`
+ 
+Bonus reading for the curious: https://flask-migrate.readthedocs.io/en/latest/
