@@ -2,9 +2,11 @@ from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import URL
+from flask_migrate import Migrate
 from .settings import DATABASE_CONFIG
 
 db = SQLAlchemy()
+migrate = None
 
 
 def create_app(test_config=None):
@@ -17,6 +19,9 @@ def create_app(test_config=None):
     url_object = URL.create(**DATABASE_CONFIG)
     app.config["SQLALCHEMY_DATABASE_URI"] = url_object
     db.init_app(app)
+
+    global migrate
+    migrate = Migrate(app, db)
 
     return app
 
