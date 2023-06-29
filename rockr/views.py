@@ -41,6 +41,11 @@ def update_user_account():
     data = User.update_user_account(request.json)
     return format_response(200, data)
 
+@app.route('/create_user_account', methods=["POST"])
+def create_user_account():
+    data = User.create_user_account(request.json)
+    return format_response(200, data)
+
 @app.route('/delete_user_account', methods=["GET"])
 def delete_user_accout():
     data = User.delete_user_account(request.args.get("user_id"))

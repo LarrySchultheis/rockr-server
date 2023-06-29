@@ -8,8 +8,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
-
-    pkid = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
@@ -17,6 +16,15 @@ class User(db.Model, SerializerMixin):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     is_band = db.Column(db.Boolean, default=False)
+
+    def __init__(self, user):
+        self.username = user['username']
+        self.first_name = user['first_name']
+        self.last_name = user['last_name']
+        self.email = user['email']
+        self.is_admin = user['is_admin']
+        self.is_active = user['is_active']
+        self.is_band = user['is_band']
 
 
 def conform_ret_arr(result_arr):
@@ -31,9 +39,9 @@ def get_users():
 
 def update_user_account(users):
     for user in users:
-        db.session.execute(db.update(User).where(User.pkid == user['pkid']).values(
+        db.session.execute(db.update(User).where(User.id == user['id']).values(
             (
-                user["pkid"],
+                user["id"],
                 user["username"],
                 user["first_name"],
                 user["last_name"], 
@@ -46,6 +54,12 @@ def update_user_account(users):
     db.session.commit()
     return "success"
 
+def create_user_account(user):
+    print(user)
+    db.session.add(User(user))
+    db.session.commit()
+    # Add usr to auth0
+    return "success"
 
 def delete_user_account(user_id):
     db.session.execute(db.delete(User).where(User.pkid == user_id))
