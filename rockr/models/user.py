@@ -4,6 +4,7 @@ from .mixins import SerializerMixin
 
 
 class User(SerializerMixin, db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(128), unique=True, nullable=False)
     username = db.Column(db.String(32), unique=True)
@@ -13,9 +14,11 @@ class User(SerializerMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_band = db.Column(db.Boolean, default=False)
 
-    @property
-    def user_role(self):
-        # get user permission level from Auth0
-        # this acts like a property and can be accessed like user.user_role
-        api_wrapper = auth0.Auth0ApiWrapper()
-        return api_wrapper.get_user_role(self.id)
+    def __init__(self, user):
+        self.username = user['username']
+        self.first_name = user['first_name']
+        self.last_name = user['last_name']
+        self.email = user['email']
+        self.is_admin = user['is_admin']
+        self.is_active = user['is_active']
+        self.is_band = user['is_band']
