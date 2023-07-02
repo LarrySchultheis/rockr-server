@@ -1,5 +1,5 @@
 from flask import request
-from rockr import auth, app, db_manager
+from rockr import app, db_manager
 from rockr.models import User
 import rockr.queries.user_queries as uq
 
@@ -11,19 +11,6 @@ def format_response(status, data):
 @app.route('/', methods=["GET"])
 def index():
     return "Welcome to Rockr!"
-
-
-@app.route('/login', methods=["POST"])
-def login():
-    data = auth.login(request.json)
-    return format_response(200, data)
-
-
-@app.route('/logout')
-def logout():
-    data = auth.logout(request.json)
-    return format_response(200, data)
-
 
 @app.route('/register', methods=['POST'])
 def register():
