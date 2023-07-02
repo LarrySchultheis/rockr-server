@@ -16,9 +16,12 @@ packaging==23.1
 pluggy==1.0.0
 psycopg2-binary==2.9.6
 pytest==7.3.2
+pytest-cov==4.1.0
 six==1.16.0
 SQLAlchemy==2.0.16
 tomli==2.0.1
 typing_extensions==4.6.3
 urllib3==1.26.6
 Werkzeug==2.3.6
+SQLAlchemy-serializer==1.4.1
+

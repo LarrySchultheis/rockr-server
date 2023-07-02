@@ -8,7 +8,6 @@ from .settings import DATABASE_CONFIG
 db = SQLAlchemy()
 migrate = None
 
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -19,6 +18,8 @@ def create_app(test_config=None):
     url_object = URL.create(**DATABASE_CONFIG)
     app.config["SQLALCHEMY_DATABASE_URI"] = url_object
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
     global migrate
     migrate = Migrate(app, db)
