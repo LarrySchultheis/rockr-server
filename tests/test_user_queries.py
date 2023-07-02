@@ -102,13 +102,13 @@ class MyTest(TestCase):
 
     def test_get_user_role(self):
         user = self.api_wrapper.get_users_by_email(self.test_user.email)[0]
-        role = uq.get_user_role(user["user_id"])[0]
+        role = uq.get_user_role(user)[0]
         assert(role['name'] == 'Basic User')
         assert(role['description'] == 'Basic User')
 
     def test_admin_get_user_role(self):
         user = self.api_wrapper.get_users_by_email(self.admin_test_user.email)[0]
-        role = uq.get_user_role(user['user_id'])[0]
+        role = uq.get_user_role(user)[0]
         assert(role['name'] == 'Admin')
         assert(role['description'] == 'Admin')   
 
