@@ -10,4 +10,4 @@ from .match_profile import (
     UserGoal
 )
 from .band import Band, UserBand
-from.message import Message, UserMessageGroup
+from .message import Message, UserMessageGroup
