@@ -5,11 +5,14 @@ from rockr import db
 # queries like: User.query.get(username='Laer Bear')
 # reference https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/
 
+
 def select(obj):
     db.session.select(obj)
 
+
 def select_all():
-    db.session.select
+    db.session.select()
+
 
 def insert(obj):
     db.session.add(obj)

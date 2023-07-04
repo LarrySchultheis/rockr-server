@@ -67,7 +67,7 @@ class MyTest(TestCase):
 
     def test_update_user_account(self):
         # "Poor man's deep copy"
-        user_copy = self.test_user.to_dict()
+        user_copy = self.test_user.serialize()
 
         # Change shit
         self.test_user.first_name = "Timmy T"
@@ -77,7 +77,7 @@ class MyTest(TestCase):
         self.test_user.is_admin = not self.test_user.is_admin
         self.test_user.is_active = not self.test_user.is_active
         self.test_user.is_band = not self.test_user.is_band
-        users = [self.test_user.to_dict()]
+        users = [self.test_user.serialize()]
         uq.update_user_account(users)
 
         # Assert shit

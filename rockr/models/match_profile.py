@@ -1,4 +1,5 @@
 from rockr import db
+
 from .mixins import SerializerMixin
 from .user import User
 
@@ -21,8 +22,8 @@ class UserMatch(SerializerMixin, db.Model):
 
 class MusicalInterest(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String, nullable=False)
-    value = db.Column(db.String(128), nullable=False)
+    type = db.Column(db.String, nullable=True)
+    description = db.Column(db.String(128), nullable=False)
 
 
 class UserMusicalInterest(SerializerMixin, db.Model):
@@ -34,7 +35,7 @@ class UserMusicalInterest(SerializerMixin, db.Model):
 class Instrument(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String, nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.String(128), nullable=False)
 
 
 class UserInstrument(SerializerMixin, db.Model):

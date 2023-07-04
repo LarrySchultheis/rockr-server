@@ -2,15 +2,18 @@ from rockr import db
 from rockr.models import User
 import rockr.auth0.auth0_api_wrapper as auth0
 
+
 def conform_ret_arr(result_arr):
     ret_arr = []
     for r in result_arr:
-        ret_arr.append(r.to_dict())
+        ret_arr.append(r.serialize())
     return ret_arr
+
 
 def get_users():
     users = db.session.execute(db.select(User)).scalars().all()
     return conform_ret_arr(users)
+
 
 def update_user_account(users):
     for user in users:
@@ -29,12 +32,14 @@ def update_user_account(users):
     db.session.commit()
     return "success"
 
+
 def create_user_account(user):
     db.session.add(User(user))
     db.session.commit()
     create_auth0_account(user)
     # Add usr to auth0
     return "success"
+
 
 def delete_user_account(user_id, email):
     db.session.execute(db.delete(User).where(User.id == user_id))
@@ -47,6 +52,7 @@ def get_user_role(user):
     # get user permission level from Auth0
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.get_user_role(user['user_id'])
+
 
 def create_auth0_account(user):
     api_wrapper = auth0.Auth0ApiWrapper()
