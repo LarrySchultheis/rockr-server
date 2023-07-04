@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from rockr import auth, app, db_manager, db
+from rockr import app, db_manager, db
 from rockr.models import User
 from rockr.queries.user_queries import conform_ret_arr
 import rockr.queries.user_queries as uq
@@ -22,19 +22,6 @@ def serialize_query_result(result):
 @app.route('/', methods=["GET"])
 def index():
     return "Welcome to Rockr!"
-
-
-@app.route('/login', methods=["POST"])
-def login():
-    data = auth.login(request.json)
-    return format_response(200, data)
-
-
-@app.route('/logout')
-def logout():
-    data = auth.logout(request.json)
-    return format_response(200, data)
-
 
 @app.route('/register', methods=['POST'])
 def register():

@@ -15,7 +15,10 @@ def create_app(test_config=None):
 
     # CITE: https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/quickstart/
     # configure the database
-    url_object = URL.create(**DATABASE_CONFIG)
+    if test_config is not None:
+        url_object = URL.create(**test_config["db_uri"])
+    else:
+        url_object = URL.create(**DATABASE_CONFIG)
     app.config["SQLALCHEMY_DATABASE_URI"] = url_object
     db.init_app(app)
     with app.app_context():
