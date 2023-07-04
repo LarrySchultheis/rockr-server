@@ -27,4 +27,4 @@ jobs:
     - name: Test with pytest
       run: | 
         echo ${{secrets.SETTINGS}} | base64 -d > rockr/settings.py
-        pytest -v
+        pytest -v --cov=rockr tests
