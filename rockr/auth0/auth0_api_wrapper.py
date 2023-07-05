@@ -1,0 +1,81 @@
+import json, urllib3, datetime
+from rockr.models.auth0 import AuthToken
+from rockr import settings, db
+
+
+class Auth0ApiWrapper():
+    def __init__(self):
+        self.settings = settings
+        self.http = urllib3.PoolManager()
+        self.token = AuthToken.query.all()[0]
+        self._validate_token()
+    
+    def _validate_token(self):
+        if (datetime.datetime.now().timestamp() > self.token.granted_at + self.token.expires_in):
+            token_obj = self._refresh_api_token()
+            self.token.token = token_obj["access_token"]
+            self.token.expires_in = token_obj["expires_in"]
+            self.token.granted_at = datetime.datetime.now().timestamp()
+            db.session.commit()
+
+    def _refresh_api_token(self):
+        resp = self.http.request(
+            "POST",
+            self.settings.TOKEN_URL,
+            headers={"content-type": "application/json"},
+            body=json.dumps({
+                "client_id": self.settings.CLIENT_ID,
+                "client_secret": self.settings.CLIENT_SECRET,
+                "audience": self.settings.AUTH0_URL,
+                "grant_type": "client_credentials"
+            })
+        )
+        return json.loads(resp.data)
+
+    def get_user_role(self, user_id):
+        resp = self.http.request(
+                                    "GET",
+                                    f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+                                    headers={
+                                        "Authorization": f"Bearer {self.token.token}"
+                                    }
+                                 )
+        return json.loads(resp.data)
+    
+    def create_auth0_account(self, user):
+        resp = self.http.request(
+                                    "POST",
+                                    f"{self.settings.AUTH0_URL}users",
+                                    headers={
+                                        "Authorization": f"Bearer {self.token.token}",
+                                        "Content-type": "application/json"
+                                    },
+                                    body=json.dumps({
+                                        "email": user["email"],
+                                        "name": f"{user['first_name']} {user['last_name']}",
+                                        "verify_email": False,
+                                        "password": user["password"],
+                                        "connection": "Username-Password-Authentication"
+                                    })
+                                )
+        return resp.status
+    
+    def delete_auth0_account(self, email):
+        user = self.get_users_by_email(email)[0]
+        resp = self.http.request(
+            "DELETE",
+            f"{self.settings.AUTH0_URL}users/{user['user_id']}",
+            headers={
+                "Authorization": f"Bearer {self.token.token}"
+            }
+        )
+        return resp.status
+    
+    def get_users_by_email(self, email):
+        resp = self.http.request(
+            "GET",
+            f"{self.settings.AUTH0_URL}users-by-email?email={email}",
+            headers={
+                "Authorization": f"Bearer {self.token.token}"
+            })
+        return json.loads(resp.data)
