@@ -56,6 +56,7 @@ def change_password(user):
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.change_password(user)
 
+
 def get_user_role(user):
     # get user permission level from Auth0
     api_wrapper = auth0.Auth0ApiWrapper()
