@@ -48,6 +48,7 @@ def delete_user_account(user_id, email):
     api_wrapper.delete_auth0_account(email)
     return "success"
 
+
 def get_user_role(user):
     # get user permission level from Auth0
     api_wrapper = auth0.Auth0ApiWrapper()
