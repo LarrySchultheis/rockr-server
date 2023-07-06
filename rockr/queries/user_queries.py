@@ -14,6 +14,10 @@ def get_users():
     users = db.session.execute(db.select(User)).scalars().all()
     return conform_ret_arr(users)
 
+def get_user(email):
+    user = db.session.execute(db.select(User).where(User.email == email)).scalars().all()[0]
+    return {"status": 200, "data": user.serialize()}
+
 
 def update_user_account(users):
     for user in users:
