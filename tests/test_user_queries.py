@@ -6,7 +6,7 @@ from rockr.models import User
 import rockr.auth0.auth0_api_wrapper as auth0
 
 # The Child Man
-TEST_USER_ID = 104
+TEST_USER_ID = 202
 ADMIN_TEST_USER_ID = 1
 
 MOCK_USER = {

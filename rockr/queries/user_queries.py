@@ -53,6 +53,9 @@ def get_user_role(user):
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.get_user_role(user['user_id'])
 
+def get_roles():
+    api_wrapper = auth0.Auth0ApiWrapper()
+    return api_wrapper.get_roles()
 
 def create_auth0_account(user):
     api_wrapper = auth0.Auth0ApiWrapper()

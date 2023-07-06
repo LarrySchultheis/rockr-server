@@ -89,3 +89,8 @@ def delete_user_accout():
 def get_user_role():
     data = uq.get_user_role(request.json)
     return format_response(200, data)
+
+@app.route('/get_roles', methods=["GET"])
+def get_roles():
+    resp = uq.get_roles()
+    return format_response(resp["status"], resp["data"])
