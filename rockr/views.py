@@ -44,10 +44,8 @@ def update_user_account():
 
 @app.route('/user', methods=["GET"])
 def user():
-    email = request.args.get("email")
-    u = db.session.execute(db.select(User).where(User.email == email)).scalars().all()[0]
-    # conform_ret_arr(u)
-    return format_response(200, u.serialize())
+    resp = uq.get_user(request.args.get("email"))
+    return format_response(resp["status"], resp["data"])
 
 
 @app.route('/instrument', methods=["GET"])
