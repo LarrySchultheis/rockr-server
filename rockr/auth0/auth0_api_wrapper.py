@@ -79,3 +79,19 @@ class Auth0ApiWrapper():
                 "Authorization": f"Bearer {self.token.token}"
             })
         return json.loads(resp.data)
+    
+    def change_password(self, user):
+        user_id = self.get_users_by_email(user["email"])[0]["user_id"]
+        resp = self.http.request(
+            "PATCH",
+            f"{self.settings.AUTH0_URL}users/{user_id}",
+            headers={
+                "Authorization": f"Bearer {self.token.token}",
+                "Content-type": "application/json"
+            },
+            body=json.dumps({
+                "password": user["password"]
+            })
+        )
+        print(resp.status, resp.data)
+        return {"status": resp.status, "data": json.loads(resp.data)}

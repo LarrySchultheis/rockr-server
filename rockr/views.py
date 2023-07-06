@@ -79,6 +79,12 @@ def delete_user_accout():
     data = uq.delete_user_account(request.args.get("id"), request.args.get("email"))
     return format_response(200, data)
 
+@app.route('/change_password', methods=["POST"])
+def change_password():
+    resp = uq.change_password(request.json)
+    print(resp)
+    return format_response(resp["status"], resp["data"])
+
 # @app.route('/get_bands', methods=["GET"])
 # def get_bands():
 #     data = bands.get_bands()
