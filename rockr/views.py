@@ -44,10 +44,8 @@ def update_user_account():
 
 @app.route('/user', methods=["GET"])
 def user():
-    email = request.args.get("email")
-    u = db.session.execute(db.select(User).where(User.email == email)).scalars().all()[0]
-    # conform_ret_arr(u)
-    return format_response(200, u.serialize())
+    resp = uq.get_user(request.args.get("email"))
+    return format_response(resp["status"], resp["data"])
 
 
 @app.route('/instrument', methods=["GET"])
@@ -94,3 +92,8 @@ def change_password():
 def get_user_role():
     data = uq.get_user_role(request.json)
     return format_response(200, data)
+
+@app.route('/get_roles', methods=["GET"])
+def get_roles():
+    resp = uq.get_roles()
+    return format_response(resp["status"], resp["data"])

@@ -14,6 +14,10 @@ def get_users():
     users = db.session.execute(db.select(User)).scalars().all()
     return conform_ret_arr(users)
 
+def get_user(email):
+    user = db.session.execute(db.select(User).where(User.email == email)).scalars().all()[0]
+    return {"status": 200, "data": user.serialize()}
+
 
 def update_user_account(users):
     for user in users:
@@ -57,6 +61,9 @@ def get_user_role(user):
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.get_user_role(user['user_id'])
 
+def get_roles():
+    api_wrapper = auth0.Auth0ApiWrapper()
+    return api_wrapper.get_roles()
 
 def create_auth0_account(user):
     api_wrapper = auth0.Auth0ApiWrapper()
