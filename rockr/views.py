@@ -82,7 +82,6 @@ def delete_user_accout():
 @app.route('/change_password', methods=["POST"])
 def change_password():
     resp = uq.change_password(request.json)
-    print(resp)
     return format_response(resp["status"], resp["data"])
 
 # @app.route('/get_bands', methods=["GET"])

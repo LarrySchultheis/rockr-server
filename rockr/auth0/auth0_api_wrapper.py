@@ -93,5 +93,4 @@ class Auth0ApiWrapper():
                 "password": user["password"]
             })
         )
-        print(resp.status, resp.data)
         return {"status": resp.status, "data": json.loads(resp.data)}

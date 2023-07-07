@@ -49,7 +49,6 @@ def delete_user_account(user_id, email):
     return "success"
 
 def change_password(user):
-    print(user)
     api_wrapper = auth0.Auth0ApiWrapper()
     return api_wrapper.change_password(user)
 
