@@ -10,6 +10,8 @@ class Auth0ApiWrapper():
         self.token = AuthToken.query.all()[0]
         self._validate_token()
     
+    # Don't want to test following two fxns this since we only get 1000 tokens a month
+    # RIP code coverage
     def _validate_token(self):
         if (datetime.datetime.now().timestamp() > self.token.granted_at + self.token.expires_in):
             token_obj = self._refresh_api_token()

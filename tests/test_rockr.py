@@ -1,9 +1,10 @@
 from flask_testing import TestCase
-from rockr import create_app, db, settings
+from rockr import create_app, db, settings, views
 from flask import Flask
 from rockr.queries import user_queries as uq
 from rockr.models import User
 import rockr.auth0.auth0_api_wrapper as auth0
+import pytest
 
 # The Child Man
 TEST_USER_ID = 202
@@ -19,6 +20,8 @@ MOCK_USER = {
     "is_active": False,
     "is_band": False
 }
+
+TEST_EMAIL = "the_child_man@bluegrass.gov"
 
 class MyTest(TestCase):
 
@@ -112,6 +115,7 @@ class MyTest(TestCase):
         assert(role['name'] == 'Admin')
         assert(role['description'] == 'Admin')   
 
+    @pytest.mark.order(1)
     def test_create_user(self):
         uq.create_user_account(MOCK_USER)
         user = self.get_user_by_email(MOCK_USER['email'])
@@ -126,6 +130,28 @@ class MyTest(TestCase):
         res = self.api_wrapper.get_users_by_email(MOCK_USER['email'])
         assert len(res) == 1
 
+    @pytest.mark.order(2)
+    def test_get_user(self):
+        data = uq.get_user(MOCK_USER["email"])["data"]
+        assert 'id' in data
+        assert 'email' in data
+        assert 'username' in data
+        assert 'first_name' in data
+        assert 'last_name' in data
+        assert 'is_admin' in data
+        assert 'is_active' in data
+        assert 'is_band' in data
+
+        assert isinstance(data["id"], int)
+        assert data["first_name"] == "Test"
+        assert data["last_name"] ==  "ME"
+        assert data["email"] == "testmebby@yahoooooo.com"
+        assert data["username"] == ":)))))"
+        assert data["is_admin"] == False
+        assert data["is_active"] == False
+        assert data["is_band"] == False
+
+    @pytest.mark.order(3)
     def test_delete_user(self):
         user = self.get_user_by_email(MOCK_USER['email'])
         uq.delete_user_account(user.id, user.email)
@@ -135,6 +161,34 @@ class MyTest(TestCase):
         res = self.api_wrapper.get_users_by_email(MOCK_USER['email'])
         assert len(res) == 0
 
+    def test_musical_interests(self):
+        data = views.musical_interests()['data']
+        assert data is not None
+        assert len(data) > 0
+        assert 'description' in data[0]
+        assert 'id' in data[0]
+        assert 'type' in data[0]
+        assert isinstance(data[0]["description"], str)
+        assert isinstance(data[0]["id"], int)        
+        assert isinstance(data[0]["type"], str)
 
+    def test_instruments(self):
+        data = views.instruments()['data']
+        assert data is not None
+        assert len(data) > 0
+        assert 'description' in data[0]
+        assert 'id' in data[0]
+        assert 'type' in data[0]
+        assert isinstance(data[0]["description"], str)
+        assert isinstance(data[0]["id"], int)        
+        assert isinstance(data[0]["type"], str)
 
-        
+    def test_goals(self):
+        data = views.goals()['data']
+        assert data is not None
+        assert len(data) > 0
+        assert 'description' in data[0]
+        assert 'id' in data[0]
+        assert isinstance(data[0]["description"], str)
+        assert isinstance(data[0]["id"], int)        
+
