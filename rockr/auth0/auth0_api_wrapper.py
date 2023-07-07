@@ -57,10 +57,82 @@ class Auth0ApiWrapper():
                                         "name": f"{user['first_name']} {user['last_name']}",
                                         "verify_email": False,
                                         "password": user["password"],
-                                        "connection": "Username-Password-Authentication"
+                                        "connection": "Username-Password-Authentication",
                                     })
                                 )
-        return resp.status
+        auth0_user = self.get_users_by_email(user["email"])
+        roles = self.get_roles()["data"]
+        if user["is_admin"]:
+            self._assign_admin(auth0_user, roles)
+        else:
+            self._assign_basic_user(auth0_user, roles)
+        if user["is_band"]:
+            self._assign_band(auth0_user, roles)
+        return {"status": resp.status, "data": resp.data}
+    
+    def _assign_admin(self, user, roles):
+        user_id = user[0]["user_id"]
+        role_id = [r["id"] for r in roles if r["name"] == "Admin"][0]
+        resp = self.http.request(
+            "POST",
+            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            headers={
+                "Authorization": f"Bearer {self.token.token}",
+                "Content-type": "application/json"
+            },
+            body=json.dumps({
+                "roles": [
+                    role_id
+                ] 
+            })
+        )
+        return {"status": resp.status, "data": resp.data}
+    
+    def _assign_band(self, user, roles):
+        user_id = user[0]["user_id"]
+        role_id = [r["id"] for r in roles if r["name"] == "Band"][0]
+        resp = self.http.request(
+            "POST",
+            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            headers={
+                "Authorization": f"Bearer {self.token.token}",
+                "Content-type": "application/json"
+            },
+            body=json.dumps({
+                "roles": [
+                    role_id
+                ] 
+            })
+        )
+        return {"status": resp.status, "data": resp.data}
+    
+    def _assign_basic_user(self, user, roles):
+        user_id = user[0]["user_id"]
+        role_id = [r["id"] for r in roles if r["name"] == "Basic User"][0]
+        resp = self.http.request(
+            "POST",
+            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            headers={
+                "Authorization": f"Bearer {self.token.token}",
+                "Content-type": "application/json"
+            },
+            body=json.dumps({
+                "roles": [
+                    role_id
+                ] 
+            })
+        )
+        return {"status": resp.status, "data": resp.data}
+
+    def get_roles(self):
+        resp = self.http.request(
+            "GET",
+            f"{self.settings.AUTH0_URL}roles",
+            headers={
+                "Authorization": f"Bearer {self.token.token}"
+            }
+        )
+        return {"status": resp.status, "data": json.loads(resp.data)}
     
     def delete_auth0_account(self, email):
         user = self.get_users_by_email(email)[0]
