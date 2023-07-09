@@ -1,6 +1,7 @@
 from rockr import db
 from .mixins import SerializerMixin
 
+
 class AuthToken(SerializerMixin, db.Model):
     __tablename__ = 'auth_token';
     id = db.Column(db.Integer, primary_key=True)

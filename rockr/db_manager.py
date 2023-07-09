@@ -22,3 +22,11 @@ def insert(obj):
 def delete(obj):
     db.session.delete(obj)
     db.session.commit()
+
+
+# def update_from_json(obj, updates):
+#     for k, v in updates.items():
+#         setattr(obj, k, v) if v else None
+#     db.session.commit()
+#     db.session.refresh(obj)
+#     return obj
