@@ -3,6 +3,7 @@ from flask.views import MethodView
 from rockr import app, db_manager, db
 from rockr.models import User, auth0
 import rockr.queries.user_queries as uq
+import rockr.auth0.auth0_api_wrapper as auth0
 from rockr.models import (
     Instrument,
     Goal,
@@ -33,10 +34,14 @@ def change_password():
     return format_response(resp["status"], resp["data"])
 
 
-@app.route('/get_user_role/<int:id>', methods=["GET"])
-def get_user_role(id):
+@app.route('/get_user_role', methods=["GET"])
+def get_user_role():
     api_wrapper = auth0.Auth0ApiWrapper()
-    return format_response(200, api_wrapper.get_user_role(id))
+    data = {
+        "role": api_wrapper.get_user_role(request.args["id"]),
+        "user_obj": User.query.filter_by(email=request.args["email"]).first().serialize()
+    }
+    return jsonify(data)
 
 
 @app.route('/get_roles', methods=["GET"])
@@ -51,7 +56,7 @@ def user_instruments(user_id):
         ui = UserInstrument.query.filter_by(user_id=user_id)
         instruments = [Instrument.query.get(i.instrument_id) for i in ui]
         return format_response(200, serialize_query_result(instruments))
-    else:
+    elif request.method == "DELETE":
         ui = UserInstrument.query.filter_by(
             user_id=user_id,
             instrument_id=request.args["id"]
@@ -66,7 +71,7 @@ def user_musical_interest(user_id):
         umi = UserMusicalInterest.query.filter_by(user_id=user_id)
         interests = [MusicalInterest.query.get(i.interest_id) for i in umi]
         return format_response(200, serialize_query_result(interests))
-    else:
+    elif request.method == "DELETE":
         umi = UserMusicalInterest.query.filter_by(
             user_id=user_id,
             interest_id=request.args["id"]
