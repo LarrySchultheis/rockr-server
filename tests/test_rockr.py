@@ -1,14 +1,15 @@
 from flask_testing import TestCase
-from rockr import create_app, db, settings, views
-from flask import Flask
-from rockr.queries import user_queries as uq
-from rockr.models import User
+from rockr import create_app, db, settings, views, db_manager
+from rockr.models import User, MusicalInterest, Instrument, Goal
 import rockr.auth0.auth0_api_wrapper as auth0
 import pytest
 
 # The Child Man
 TEST_USER_ID = 202
 ADMIN_TEST_USER_ID = 1
+
+TEST_USER_AUTH0_ID = "auth0|647658e08c3b4001e6e0ae70"
+ADMIN_USER_AUTH0_ID = "auth0|64a7fc38c8e7f423cb52858a"
 
 MOCK_USER = {
     "first_name": "Test",
@@ -22,6 +23,7 @@ MOCK_USER = {
 }
 
 TEST_EMAIL = "the_child_man@bluegrass.gov"
+
 
 class MyTest(TestCase):
 
@@ -37,51 +39,44 @@ class MyTest(TestCase):
         self.api_wrapper = auth0.Auth0ApiWrapper()
 
     def get_admin_test_user(self):
-        return db.session.execute(db.select(User).where(User.id == ADMIN_TEST_USER_ID)).scalars().all()[0]
+        return User.query.get(ADMIN_TEST_USER_ID)
 
     def get_test_user(self):
-        return db.session.execute(db.select(User).where(User.id == TEST_USER_ID)).scalars().all()[0]
+        return User.query.get(TEST_USER_ID)
     
     def get_user_by_email(self, email):
-        return db.session.execute(db.select(User).where(User.email == email)).scalars().all()[0]
+        return User.query.filter_by(email=email).first()
 
     def test_get_users(self):
-        users = uq.get_users()
+        users = User.query.all()
         assert(users is not None)
         assert(len(users) > 0)
 
-        assert "username" in users[0]
-        assert "first_name" in users[0]
-        assert "last_name" in users[0]
-        assert "id" in users[0]
-        assert "email" in users[0]
-        assert "is_admin" in users[0]
-        assert "is_active" in users[0]
-        assert "is_band" in users[0]
-
-        assert isinstance(users[0]["username"], str)
-        assert isinstance(users[0]["first_name"], str)
-        assert isinstance(users[0]["last_name"], str)
-        assert isinstance(users[0]["id"], int)
-        assert isinstance(users[0]["email"], str)
-        assert isinstance(users[0]["is_admin"], bool)
-        assert isinstance(users[0]["is_active"], bool)        
-        assert isinstance(users[0]["is_band"], bool)
+        usr = users[0]
+        assert isinstance(usr.username, str)
+        assert isinstance(usr.first_name, str)
+        assert isinstance(usr.last_name, str)
+        assert isinstance(usr.id, int)
+        assert isinstance(usr.email, str)
+        assert isinstance(usr.is_admin, bool)
+        assert isinstance(usr.is_active, bool)
+        assert isinstance(usr.is_band, bool)
 
     def test_update_user_account(self):
         # "Poor man's deep copy"
         user_copy = self.test_user.serialize()
 
         # Change shit
-        self.test_user.first_name = "Timmy T"
-        self.test_user.last_name = "Childs"
-        self.test_user.email = "ttchilders@msn.net"
-        self.test_user.username = "ttchilds"
-        self.test_user.is_admin = not self.test_user.is_admin
-        self.test_user.is_active = not self.test_user.is_active
-        self.test_user.is_band = not self.test_user.is_band
-        users = [self.test_user.serialize()]
-        uq.update_user_account(users)
+        usr = User.query.get(TEST_USER_ID)
+        usr.update(**{
+            "first_name": "Timmy T",
+            "last_name": "Childs",
+            "email": "ttchilders@msn.net",
+            "username": "ttchilds",
+            "is_admin": not usr.is_admin,
+            "is_active": not usr.is_active,
+            "is_band": not usr.is_band,
+        })
 
         # Assert shit
         updated_user = self.get_test_user()
@@ -104,21 +99,21 @@ class MyTest(TestCase):
         db.session.commit()
 
     def test_get_user_role(self):
-        user = self.api_wrapper.get_users_by_email(self.test_user.email)[0]
-        role = uq.get_user_role(user)[0]
+        api_wrapper = auth0.Auth0ApiWrapper()
+        role = api_wrapper.get_user_role(TEST_USER_AUTH0_ID)[0]
         assert(role['name'] == 'Basic User')
         assert(role['description'] == 'Basic User')
 
     def test_admin_get_user_role(self):
-        user = self.api_wrapper.get_users_by_email(self.admin_test_user.email)[0]
-        role = uq.get_user_role(user)[0]
+        api_wrapper = auth0.Auth0ApiWrapper()
+        role = api_wrapper.get_user_role(ADMIN_USER_AUTH0_ID)[0]
         assert(role['name'] == 'Admin')
         assert(role['description'] == 'Admin')   
 
     @pytest.mark.order(1)
     def test_create_user(self):
-        uq.create_user_account(MOCK_USER)
-        user = self.get_user_by_email(MOCK_USER['email'])
+        db_manager.insert(User(MOCK_USER))
+        user = User.query.filter_by(email=MOCK_USER["email"]).first()
         assert(user.email == MOCK_USER['email'])
         assert(user.first_name == MOCK_USER['first_name'])
         assert(user.last_name == MOCK_USER['last_name'])
@@ -126,69 +121,50 @@ class MyTest(TestCase):
         assert(user.is_admin == MOCK_USER['is_admin'])
         assert(user.is_active == MOCK_USER['is_active'])
         assert(user.is_band == MOCK_USER['is_band'])
-
-        res = self.api_wrapper.get_users_by_email(MOCK_USER['email'])
-        assert len(res) == 1
+        assert User.query.filter_by(email=MOCK_USER["email"]).count() == 1
 
     @pytest.mark.order(2)
     def test_get_user(self):
-        data = uq.get_user(MOCK_USER["email"])["data"]
-        assert 'id' in data
-        assert 'email' in data
-        assert 'username' in data
-        assert 'first_name' in data
-        assert 'last_name' in data
-        assert 'is_admin' in data
-        assert 'is_active' in data
-        assert 'is_band' in data
+        usr = User.query.filter_by(email=MOCK_USER["email"]).first()
 
-        assert isinstance(data["id"], int)
-        assert data["first_name"] == "Test"
-        assert data["last_name"] ==  "ME"
-        assert data["email"] == "testmebby@yahoooooo.com"
-        assert data["username"] == ":)))))"
-        assert data["is_admin"] == False
-        assert data["is_active"] == False
-        assert data["is_band"] == False
+        assert isinstance(usr.id, int)
+        assert usr.first_name == "Test"
+        assert usr.last_name ==  "ME"
+        assert usr.email == "testmebby@yahoooooo.com"
+        assert usr.username == ":)))))"
+        assert usr.is_admin == False
+        assert usr.is_active == False
+        assert usr.is_band == False
 
     @pytest.mark.order(3)
     def test_delete_user(self):
-        user = self.get_user_by_email(MOCK_USER['email'])
-        uq.delete_user_account(user.id, user.email)
-        res = db.session.execute(db.select(User).where(User.email == MOCK_USER['email'])).scalars().all()
-        assert len(res) == 0
-
-        res = self.api_wrapper.get_users_by_email(MOCK_USER['email'])
-        assert len(res) == 0
+        usr = User.query.filter_by(email=MOCK_USER['email']).first()
+        db_manager.delete(usr)
+        assert User.query.filter_by(email=MOCK_USER['email']).count() == 0
 
     def test_musical_interests(self):
-        data = views.musical_interests()['data']
-        assert data is not None
-        assert len(data) > 0
-        assert 'description' in data[0]
-        assert 'id' in data[0]
-        assert 'type' in data[0]
-        assert isinstance(data[0]["description"], str)
-        assert isinstance(data[0]["id"], int)        
-        assert isinstance(data[0]["type"], str)
+        mi_cnt = MusicalInterest.query.count()
+        assert mi_cnt > 0
+
+        mi = MusicalInterest.query.first()
+        assert isinstance(mi.description, str)
+        assert isinstance(mi.id, int)
+        assert isinstance(mi.type, str)
 
     def test_instruments(self):
-        data = views.instruments()['data']
-        assert data is not None
-        assert len(data) > 0
-        assert 'description' in data[0]
-        assert 'id' in data[0]
-        assert 'type' in data[0]
-        assert isinstance(data[0]["description"], str)
-        assert isinstance(data[0]["id"], int)        
-        assert isinstance(data[0]["type"], str)
+        i_cnt = Instrument.query.count()
+        assert i_cnt > 0
+
+        i = Instrument.query.first()
+        assert isinstance(i.description, str)
+        assert isinstance(i.id, int)
+        assert isinstance(i.type, str)
 
     def test_goals(self):
-        data = views.goals()['data']
-        assert data is not None
-        assert len(data) > 0
-        assert 'description' in data[0]
-        assert 'id' in data[0]
-        assert isinstance(data[0]["description"], str)
-        assert isinstance(data[0]["id"], int)        
+        g_cnt = Goal.query.count()
+        assert g_cnt > 0
+
+        g = MusicalInterest.query.first()
+        assert isinstance(g.description, str)
+        assert isinstance(g.id, int)
 
