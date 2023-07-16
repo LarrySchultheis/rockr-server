@@ -13,7 +13,7 @@ class Auth0ApiWrapper():
     # Don't want to test following two fxns since we only get 1000 tokens a month
     # RIP code coverage
     def _validate_token(self):
-        if (datetime.datetime.now().timestamp() > self.token.granted_at + self.token.expires_in):
+        if datetime.datetime.now().timestamp() > self.token.granted_at + self.token.expires_in:
             token_obj = self._refresh_api_token()
             self.token.token = token_obj["access_token"]
             self.token.expires_in = token_obj["expires_in"]
@@ -37,7 +37,7 @@ class Auth0ApiWrapper():
     def get_user_role(self, user_id):
         resp = self.http.request(
                                     "GET",
-                                    f"{self.settings.AUTH0_URL}/users/{user_id}/roles",
+                                    f"{self.settings.AUTH0_URL}users/{user_id}/roles",
                                     headers={
                                         "Authorization": f"Bearer {self.token.token}"
                                     }
