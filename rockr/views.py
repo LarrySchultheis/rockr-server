@@ -7,6 +7,7 @@ from rockr.models import (
     Instrument,
     Goal,
     MusicalInterest,
+    UserMatch
 )
 
 
@@ -18,6 +19,15 @@ def serialize_query_result(result):
     list_result = [r.serialize() for r in result]
     return jsonify(list_result).json
 
+def serialize_tuple_list(result, keys):
+    return_lst = []
+    for r in result:
+        obj = {}
+        for i, t in enumerate(r):
+            obj[keys[i]] = t.serialize()
+        return_lst.append(obj)
+    return jsonify(return_lst).json
+            
 
 @app.route('/', methods=["GET"])
 def index():
@@ -97,3 +107,9 @@ def get_user_role():
 def get_roles():
     resp = uq.get_roles()
     return format_response(resp["status"], resp["data"])
+
+@app.route('/matches', methods=["GET"])
+def get_matches():
+    user = User.query.filter_by(email=request.args.get("email")).first();
+    matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+    return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
