@@ -1,8 +1,10 @@
 from flask_testing import TestCase
 from rockr import create_app, db, settings, views, db_manager
-from rockr.models import User, MusicalInterest, Instrument, Goal
+from rockr.models import User, MusicalInterest, Instrument, Goal, UserMatch
 import rockr.auth0.auth0_api_wrapper as auth0
-import pytest
+import pytest, json
+import jsonschema
+from jsonschema import validate, RefResolver, Draft7Validator
 
 # The Child Man
 TEST_USER_ID = 202
@@ -22,8 +24,25 @@ MOCK_USER = {
     "is_band": False
 }
 
-TEST_EMAIL = "the_child_man@bluegrass.gov"
+TEST_EMAIL = "the_child_man@ky.gov"
 
+SCHEMA_PATH = "tests/schemas/"
+
+def validate_json(jsonData, schema, resolver):
+    try:
+        validator = Draft7Validator(schema, resolver)
+        validator.validate(jsonData)
+    except jsonschema.exceptions.ValidationError as err:
+        return False
+    return True
+
+def get_schema(schema_file):
+    with open(schema_file, 'r') as fp:
+        schema = json.load(fp)
+        return schema
+
+def get_schema_resolver(schema):
+    return RefResolver.from_schema(schema)
 
 class MyTest(TestCase):
 
@@ -31,7 +50,7 @@ class MyTest(TestCase):
         # pass in test configuration
         return create_app(test_config={
             "db_uri": settings.TEST_DATABASE_CONFIG
-        })
+        })[0]
 
     def setUp(self):
         self.test_user = self.get_test_user()
@@ -168,3 +187,11 @@ class MyTest(TestCase):
         assert isinstance(g.description, str)
         assert isinstance(g.id, int)
 
+    def test_matches(self):
+        user = User.query.filter_by(email=TEST_EMAIL).first();
+        matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+        assert len(matches) > 0
+        matches_obj = views.serialize_tuple_list(matches, ["user", "match"])
+        schema = get_schema(f"{SCHEMA_PATH}/user_match.schema.json")
+        resolver = get_schema_resolver(schema)
+        assert(validate_json(matches_obj, schema, resolver))
