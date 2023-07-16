@@ -4,14 +4,19 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import URL
 from flask_migrate import Migrate
 from .settings import DATABASE_CONFIG
+from flask_socketio import SocketIO
 
 db = SQLAlchemy()
+
 migrate = None
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
     CORS(app, origins=["http://localhost:3000"])
+
+
 
     # CITE: https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/quickstart/
     # configure the database
@@ -27,10 +32,10 @@ def create_app(test_config=None):
     global migrate
     migrate = Migrate(app, db)
 
-    return app
+    return app, socketio
 
 
-app = create_app()
+app, socketio = create_app()
 
 # import here to avoid circular imports. Not a great practice, but docs say it's okay
 import rockr.views

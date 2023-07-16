@@ -1,8 +1,10 @@
 from flask import request, jsonify
-from rockr import app, db_manager, db
+from rockr import app, socketio, db_manager, db
 from rockr.models import User
 from rockr.queries.user_queries import conform_ret_arr
 import rockr.queries.user_queries as uq
+from flask_socketio import send, emit
+
 from rockr.models import (
     Instrument,
     Goal,
@@ -113,3 +115,18 @@ def get_matches():
     user = User.query.filter_by(email=request.args.get("email")).first();
     matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
     return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
+
+@socketio.on('connect')
+def test_connect():
+    print("connect")
+    emit('after connect',  {'data':'Lets dance'})
+
+@socketio.on('message')
+def handle_message(message):
+    print(message)
+    emit("message-response", {'data': "Yes you are!!"})
+
+@socketio.on('test')
+def handle_message(message):
+    print(message)
+    emit("message-response", {'data': "Testingggg"})
