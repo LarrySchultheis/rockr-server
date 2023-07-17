@@ -189,7 +189,8 @@ class MyTest(TestCase):
 
     def test_matches(self):
         user = User.query.filter_by(email=TEST_EMAIL).first();
-        matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+        matches = UserMatch.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+        assert matches is not None
         assert len(matches) > 0
         matches_obj = views.serialize_tuple_list(matches, ["user", "match"])
         schema = get_schema(f"{SCHEMA_PATH}/user_match.schema.json")
