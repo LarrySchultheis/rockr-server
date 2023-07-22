@@ -1,10 +1,13 @@
 from flask import request, jsonify
 from flask.views import MethodView
 from rockr import app, db_manager, db, socketio
-from rockr.models import User, auth0
+from rockr.utils import message_handler as mh
 import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0
+from flask_socketio import emit
 from rockr.models import (
+    User, 
+    auth0,
     Instrument,
     Goal,
     MusicalInterest,
@@ -53,6 +56,47 @@ def get_user_role():
     }
     return jsonify(data)
 
+@app.route('/update_user_account', methods=["POST"])
+def update_user_account():
+    users = request.json
+    for user in users:
+        db.session.execute(db.update(User).where(User.id == user['id']).values(
+            (
+                user["id"],
+                user["email"],
+                user["username"],
+                user["first_name"],
+                user["last_name"], 
+                user["is_admin"],
+                user["is_active"],
+                user["is_band"]
+            )
+        ))
+        db.session.commit()
+    return "success"
+
+@app.route('/create_user_account', methods=["POST"])
+def create_user_account():
+    user = request.json
+    db.session.add(User(user))
+    db.session.commit()
+    create_auth0_account(user)
+    # Add usr to auth0
+    return "success"
+
+def create_auth0_account(user):
+    api_wrapper = auth0.Auth0ApiWrapper()
+    return api_wrapper.create_auth0_account(user)
+
+@app.route('/delete_user_account')
+def delete_user_account():
+    user_id = request.args.get("id")
+    email = request.args.get("email")
+    db.session.execute(db.delete(User).where(User.id == user_id))
+    db.session.commit()
+    api_wrapper = auth0.Auth0ApiWrapper()
+    api_wrapper.delete_auth0_account(email)
+    return "success"
 
 @app.route('/get_roles', methods=["GET"])
 def get_roles():
@@ -72,13 +116,8 @@ def test_connect():
 
 @socketio.on('message')
 def handle_message(message):
-    print(message)
+    mh.save_message(message)
     emit("message-response", {'data': "Yes you are!!"})
-
-@socketio.on('test')
-def handle_message(message):
-    print(message)
-    emit("message-response", {'data': "Testingggg"})
 
 @app.route('/user_instruments/<int:user_id>', methods=["GET", "DELETE"])
 def user_instruments(user_id):
