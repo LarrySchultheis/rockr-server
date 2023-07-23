@@ -13,6 +13,7 @@ from rockr.models import (
     UserGoal,
     UserMusicalInterest,
 )
+from rockr.models import User, auth0
 from rockr.models.band import Band, UserBand
 
 def format_response(status, data):
@@ -95,26 +96,17 @@ def user_goals(user_id):
         db_manager.delete(ug)
         return format_response(204, None)
     
-#Added for the User Band queries
 @app.route('/user_band/<int:user_id>', methods=["GET","POST","DELETE"])
 def user_band(user_id):
     if request.method == "GET":
-        umi = UserBand.query.filter_by(user_id=user_id)
-        bandsids = [Band.query.get(b.band_id) for b in umi]
+        ub = UserBand.query.filter_by(user_id=user_id)
+        bandsids = [Band.query.get(b.band_id) for b in ub]
         return format_response(200, serialize_query_result(bandsids))
     #For a new User Band Adding Query
     elif request.method == "POST":
-        ub = UserBand.query(func.max(UserBand.id))
-        highestid = ub.id;
-        highestid = highestid+1;
-        ubnew = {
-            "id": highestid,
-            "user_id": user_id,
-            "band_id": int(request.args["id"])
-        }
-        db_manager.insert(ubnew)
+        db_manager.insert(UserBand(user_id=user_id, band_id=request.args["id"]))
         return format_response(201, None)
-    else:
+    elif request.method == "DELETE":
         ub = UserBand.query.filter_by(
             user_id=user_id,
             band_id=int(request.args["id"])
@@ -122,7 +114,6 @@ def user_band(user_id):
         db_manager.delete(ub)
         return format_response(204, None)
     
-#In case you want to modify the functions to be like this
 @app.route('/get_user_band/<int:user_id>', methods=["GET"])
 def get_user_band(user_id):
     umi = UserBand.query.filter_by(user_id=user_id)
