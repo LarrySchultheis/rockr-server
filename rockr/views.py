@@ -1,6 +1,7 @@
 import json
 from flask import request, jsonify
 from flask.views import MethodView
+from sqlalchemy import func
 from rockr import app, db_manager, db
 from rockr.models import User, auth0, MatchProfile
 import rockr.queries.user_queries as uq
@@ -13,7 +14,8 @@ from rockr.models import (
     UserGoal,
     UserMusicalInterest,
 )
-
+from rockr.models import User, auth0
+from rockr.models.band import Band, UserBand
 
 def format_response(status, data):
     return {"status": status, "data": data}
@@ -128,6 +130,23 @@ def user_goals(user_id):
         db_manager.delete(ug)
         return format_response(204, None)
 
+@app.route('/user_band/<int:user_id>', methods=["GET","POST","DELETE"])
+def user_band(user_id):
+    if request.method == "GET":
+        ub = UserBand.query.filter_by(user_id=user_id)
+        bandsids = [Band.query.get(b.band_id) for b in ub]
+        return format_response(200, serialize_query_result(bandsids))
+    #For a new User Band Adding Query
+    elif request.method == "POST":
+        db_manager.insert(UserBand(user_id=user_id, band_id=request.args["id"]))
+        return format_response(201, None)
+    elif request.method == "DELETE":
+        ub = UserBand.query.filter_by(
+            user_id=user_id,
+            band_id=int(request.args["id"])
+        ).first()
+        db_manager.delete(ub)
+        return format_response(204, None)
 
 @app.route('/check_match_profile/<int:user_id>', methods=["GET"])
 def check_match_profile(user_id):
