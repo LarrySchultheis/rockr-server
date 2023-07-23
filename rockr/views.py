@@ -7,9 +7,9 @@ import rockr.auth0.auth0_api_wrapper as auth0
 from flask_socketio import emit
 from rockr.models import (
     User, 
-    auth0,
     Instrument,
     Goal,
+    Message,
     MusicalInterest,
     UserInstrument,
     UserMatch,
@@ -109,6 +109,16 @@ def get_matches():
     matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
     return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
 
+@app.route('/messages', methods=["GET"])
+def get_messages():
+    messages = Message.query.all()
+    return format_response(200, serialize_query_result(messages))
+
+@app.route('/user', methods=["GET"])
+def get_user():
+    user = User.query.filter_by(email=request.args.get("email")).all()
+    return format_response(200, serialize_query_result(user))
+
 @socketio.on('connect')
 def test_connect():
     print("connect")
@@ -117,7 +127,7 @@ def test_connect():
 @socketio.on('message')
 def handle_message(message):
     mh.save_message(message)
-    emit("message-response", {'data': "Yes you are!!"})
+    emit("messageResponse", {'data': message['text'], 'sender': message['sender'], 'recipient': message['recipient']})
 
 @app.route('/user_instruments/<int:user_id>', methods=["GET", "DELETE"])
 def user_instruments(user_id):
