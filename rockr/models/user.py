@@ -14,10 +14,10 @@ class User(SerializerMixin, db.Model):
     is_band = db.Column(db.Boolean, default=False)
 
     def __init__(self, user):
-        self.username = user['username']
-        self.first_name = user['first_name']
-        self.last_name = user['last_name']
-        self.email = user['email']
-        self.is_admin = user['is_admin']
-        self.is_active = user['is_active']
-        self.is_band = user['is_band']
+        self.username = user["username"]
+        self.first_name = user["first_name"]
+        self.last_name = user["last_name"]
+        self.email = user["email"]
+        self.is_admin = user["is_admin"]
+        self.is_active = user["is_active"]
+        self.is_band = user["is_band"]

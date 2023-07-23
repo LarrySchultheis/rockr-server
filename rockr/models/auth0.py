@@ -3,7 +3,7 @@ from .mixins import SerializerMixin
 
 
 class AuthToken(SerializerMixin, db.Model):
-    __tablename__ = 'auth_token';
+    __tablename__ = "auth_token"
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.Text, nullable=False)
     expires_in = db.Column(db.Integer, nullable=False)
