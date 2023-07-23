@@ -95,7 +95,7 @@ def user_goals(user_id):
         ).first()
         db_manager.delete(ug)
         return format_response(204, None)
-    
+
 @app.route('/user_band/<int:user_id>', methods=["GET","POST","DELETE"])
 def user_band(user_id):
     if request.method == "GET":
@@ -113,35 +113,6 @@ def user_band(user_id):
         ).first()
         db_manager.delete(ub)
         return format_response(204, None)
-    
-@app.route('/get_user_band/<int:user_id>', methods=["GET"])
-def get_user_band(user_id):
-    umi = UserBand.query.filter_by(user_id=user_id)
-    bandsids = [Band.query.get(b.band_id) for b in umi]
-    return format_response(200, serialize_query_result(bandsids))
-
-@app.route('/add_user_band/<int:user_id>', methods=["POST"])
-def add_user_band(user_id):
-    #For a new User Band Adding Query
-    ub = UserBand.query(func.max(UserBand.id))
-    highestid = ub.id;
-    highestid = highestid+1;
-    ubnew = {
-        "id": highestid,
-        "user_id": user_id,
-        "band_id": int(request.args["id"])
-    }
-    db_manager.insert(ubnew)
-    return format_response(201, None)
-
-@app.route('/remove_user_band/<int:user_id>', methods=["DELETE"])
-def remove_user_band(user_id):
-    ub = UserBand.query.filter_by(
-        user_id=user_id,
-        band_id=int(request.args["id"])
-    ).first()
-    db_manager.delete(ub)
-    return format_response(204, None)
 
 class ItemAPI(MethodView):
     init_every_request = False
