@@ -1,4 +1,3 @@
-import rockr.auth0.auth0_api_wrapper as auth0
 from rockr import db
 from .mixins import SerializerMixin
 
