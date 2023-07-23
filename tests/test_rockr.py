@@ -1,6 +1,15 @@
 from flask_testing import TestCase
 from rockr import create_app, db, settings, views, db_manager
-from rockr.models import User, MusicalInterest, Instrument, Goal
+from rockr.models import (
+    User,
+    MusicalInterest,
+    Instrument,
+    Goal,
+    UserInstrument,
+    UserMusicalInterest,
+    UserGoal,
+    MatchProfile,
+)
 import rockr.auth0.auth0_api_wrapper as auth0
 import pytest
 
@@ -166,3 +175,107 @@ class MyTest(TestCase):
         g = MusicalInterest.query.first()
         assert isinstance(g.description, str)
         assert isinstance(g.id, int)
+
+    def test_create_user_instruments(self):
+        woodwind_instrument = Instrument.query.filter_by(type="woodwind").first()
+        db_manager.insert(
+            UserInstrument(user_id=TEST_USER_ID, instrument_id=woodwind_instrument.id)
+        )
+        assert UserInstrument.query.filter_by(user_id=TEST_USER_ID).count() > 0
+
+        # mock response to user interacting with InstrumentSelect on FE
+        for instrument in UserInstrument.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(instrument)
+        assert UserInstrument.query.filter_by(user_id=TEST_USER_ID).count() == 0
+
+        brass_instruments = Instrument.query.filter_by(type="brass")
+        for instrument in brass_instruments:
+            db_manager.insert(
+                UserInstrument(user_id=TEST_USER_ID, instrument_id=instrument.id)
+            )
+        assert (
+            UserInstrument.query.filter_by(user_id=TEST_USER_ID).count()
+            == brass_instruments.count()
+        )
+
+    def test_create_user_musical_interests(self):
+        more_cowbell_bb = MusicalInterest.query.filter_by(
+            description="more cowbell"
+        ).first()
+        db_manager.insert(
+            UserMusicalInterest(user_id=TEST_USER_ID, interest_id=more_cowbell_bb.id)
+        )
+        assert UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID).count() > 0
+
+        # mock response to user interacting with InterestSelect on FE
+        for interest in UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(interest)
+        assert UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID).count() == 0
+
+        misc_interests = MusicalInterest.query.filter_by(type=None)
+        for interest in misc_interests:
+            db_manager.insert(
+                UserMusicalInterest(user_id=TEST_USER_ID, interest_id=interest.id)
+            )
+        assert (
+            UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID).count()
+            == misc_interests.count()
+        )
+
+    def test_create_user_goals(self):
+        random_goal = Goal.query.filter().first()
+        db_manager.insert(UserGoal(user_id=TEST_USER_ID, goal_id=random_goal.id))
+        assert UserGoal.query.filter_by(user_id=TEST_USER_ID).count() > 0
+
+        # mock response to user interacting with GoalSelect on FE
+        for goal in UserGoal.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(goal)
+        assert UserGoal.query.filter_by(user_id=TEST_USER_ID).count() == 0
+
+        band_goals = Goal.query.filter(Goal.description.contains("band"))
+        for goal in band_goals:
+            db_manager.insert(UserGoal(user_id=TEST_USER_ID, goal_id=goal.id))
+        assert (
+            UserGoal.query.filter_by(user_id=TEST_USER_ID).count() == band_goals.count()
+        )
+
+    def test_match_profile_check(self):
+        usr = User.query.get(TEST_USER_ID)
+        usr_mp = (
+            MatchProfile.query.filter_by(user_id=usr.id).first()
+            if MatchProfile.query.filter_by(user_id=usr.id).first()
+            else db_manager.insert(MatchProfile(user_id=usr.id))
+        )
+
+        # destroy ye old match profile!
+        for interest in UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(interest)
+        assert UserMusicalInterest.query.filter_by(user_id=TEST_USER_ID).count() == 0
+
+        for instrument in UserInstrument.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(instrument)
+        assert UserInstrument.query.filter_by(user_id=TEST_USER_ID).count() == 0
+
+        for goal in UserGoal.query.filter_by(user_id=TEST_USER_ID):
+            db_manager.delete(goal)
+        assert UserGoal.query.filter_by(user_id=TEST_USER_ID).count() == 0
+        assert not usr_mp.is_complete
+
+        woodwind_instrument = Instrument.query.filter_by(type="woodwind").first()
+        more_cowbell_bb = MusicalInterest.query.filter_by(
+            description="more cowbell"
+        ).first()
+        random_goal = Goal.query.filter().first()
+
+        db_manager.insert(
+            UserInstrument(user_id=usr.id, instrument_id=woodwind_instrument.id)
+        )
+        assert not usr_mp.is_complete
+
+        db_manager.insert(
+            UserMusicalInterest(user_id=usr.id, interest_id=more_cowbell_bb.id)
+        )
+        assert not usr_mp.is_complete
+
+        db_manager.insert(UserGoal(user_id=usr.id, goal_id=random_goal.id))
+        assert usr_mp.is_complete
