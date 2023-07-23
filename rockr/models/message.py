@@ -11,6 +11,8 @@ class UserMessageGroup(SerializerMixin, db.Model):
 
 class Message(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_message_group_id = db.Column(db.Integer, db.ForeignKey(UserMessageGroup.id), nullable=False)
+    user_message_group_id = db.Column(
+        db.Integer, db.ForeignKey(UserMessageGroup.id), nullable=False
+    )
     sender_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     message = db.Column(db.Text, nullable=False)
