@@ -2,7 +2,7 @@ import json
 from flask import request, jsonify
 from flask.views import MethodView
 from rockr import app, db_manager, db
-from rockr.models import User, auth0
+from rockr.models import User, auth0, MatchProfile
 import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0
 from rockr.models import (
@@ -129,39 +129,46 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
+@app.route('/check_match_profile/<int:user_id>', methods=["GET"])
+def check_match_profile(user_id):
+    if request.method == "GET":
+        mp = MatchProfile.query.filter_by(user_id=user_id).first()
+        if not mp:
+            mp = MatchProfile(user_id=user_id)
+            db_manager.insert(MatchProfile(user_id=user_id))
+        return {"is_match_profile_complete": mp.is_complete}
+
+
 class ItemAPI(MethodView):
     init_every_request = False
 
     def __init__(self, model):
         self.model = model
-        # self.validator = generate_validator(model)
 
-    def _get_item(self, id):
-        return self.model.query.get_or_404(id)
+    def _get_item(self, item_id):
+        return self.model.query.get_or_404(item_id)
 
-    def get(self, id):
-        item = self._get_item(id)
+    def get(self, item_id):
+        item = self._get_item(item_id)
         return jsonify(item.serialize())
 
-    def patch(self, id):
-        item = self._get_item(id)
+    def patch(self, item_id):
+        item = self._get_item(item_id)
         item.update(**request.json["params"])
         db.session.commit()
         return jsonify(item.serialize())
 
-    def delete(self, id):
-        item = self._get_item(id)
+    def delete(self, item_id):
+        item = self._get_item(item_id)
         db_manager.delete(item)
         return "", 204
 
 
 class GroupAPI(MethodView):
-    # list all data for
     init_every_request = False
 
     def __init__(self, model):
         self.model = model
-        # self.validator = generate_validator(model, create=True)
 
     def get(self):
         items = self.model.query.all()
@@ -181,7 +188,7 @@ class GroupAPI(MethodView):
 def register_api(app, model, name):
     item = ItemAPI.as_view(f"{name}-item", model)
     group = GroupAPI.as_view(f"{name}-group", model)
-    app.add_url_rule(f"/{name}/<int:id>", view_func=item)
+    app.add_url_rule(f"/{name}/<int:item_id>", view_func=item)
     app.add_url_rule(f"/{name}/", view_func=group)
 
 
