@@ -279,3 +279,13 @@ class MyTest(TestCase):
 
         db_manager.insert(UserGoal(user_id=usr.id, goal_id=random_goal.id))
         assert usr_mp.is_complete
+
+    def test_pause_user_account(self):
+        usr = User.query.get(TEST_USER_ID)
+        mock_patch_not_active = {"is_active": False}
+        usr.update(**mock_patch_not_active)
+        assert not usr.is_active
+
+        mock_patch_is_active = {"is_active": True}
+        usr.update(**mock_patch_is_active)
+        assert usr.is_active
