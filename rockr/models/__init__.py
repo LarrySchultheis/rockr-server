@@ -7,7 +7,7 @@ from .match_profile import (
     Instrument,
     UserInstrument,
     Goal,
-    UserGoal
+    UserGoal,
 )
 from .band import Band, UserBand
 from .message import Message, UserMessageGroup
