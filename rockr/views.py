@@ -1,16 +1,20 @@
 import json
 from flask import request, jsonify
 from flask.views import MethodView
-from sqlalchemy import func
-from rockr import app, db_manager, db
-from rockr.models import User, auth0, MatchProfile
+from rockr import app, db_manager, db, socketio
+from rockr.utils import message_handler as mh
+from rockr.models import User, MatchProfile
 import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0
+from flask_socketio import emit
 from rockr.models import (
+    User, 
     Instrument,
     Goal,
+    Message,
     MusicalInterest,
     UserInstrument,
+    UserMatch,
     UserGoal,
     UserMusicalInterest,
 )
@@ -26,6 +30,15 @@ def serialize_query_result(result):
     list_result = [r.serialize() for r in result]
     return jsonify(list_result).json
 
+def serialize_tuple_list(result, keys):
+    return_lst = []
+    for r in result:
+        obj = {}
+        for i, t in enumerate(r):
+            obj[keys[i]] = t.serialize()
+        return_lst.append(obj)
+    return jsonify(return_lst).json
+            
 
 @app.route("/", methods=["GET"])
 def index():
@@ -49,12 +62,78 @@ def get_user_role():
     }
     return jsonify(data)
 
+@app.route('/update_user_account', methods=["POST"])
+def update_user_account():
+    users = request.json
+    for user in users:
+        db.session.execute(db.update(User).where(User.id == user['id']).values(
+            (
+                user["id"],
+                user["email"],
+                user["username"],
+                user["first_name"],
+                user["last_name"], 
+                user["is_admin"],
+                user["is_active"],
+                user["is_band"]
+            )
+        ))
+        db.session.commit()
+    return "success"
+
+@app.route('/create_user_account', methods=["POST"])
+def create_user_account():
+    user = request.json
+    db.session.add(User(user))
+    db.session.commit()
+    create_auth0_account(user)
+    # Add usr to auth0
+    return "success"
+
+def create_auth0_account(user):
+    api_wrapper = auth0.Auth0ApiWrapper()
+    return api_wrapper.create_auth0_account(user)
+
+@app.route('/delete_user_account')
+def delete_user_account():
+    user_id = request.args.get("id")
+    email = request.args.get("email")
+    db.session.execute(db.delete(User).where(User.id == user_id))
+    db.session.commit()
+    api_wrapper = auth0.Auth0ApiWrapper()
+    api_wrapper.delete_auth0_account(email)
+    return "success"
 
 @app.route("/get_roles", methods=["GET"])
 def get_roles():
     resp = uq.get_roles()
     return format_response(resp["status"], resp["data"])
 
+@app.route('/matches', methods=["GET"])
+def get_matches():
+    user = User.query.filter_by(email=request.args.get("email")).first();
+    matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+    return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
+
+@app.route('/messages', methods=["GET"])
+def get_messages():
+    messages = Message.query.all()
+    return format_response(200, serialize_query_result(messages))
+
+@app.route('/user', methods=["GET"])
+def get_user():
+    user = User.query.filter_by(email=request.args.get("email")).all()
+    return format_response(200, serialize_query_result(user))
+
+@socketio.on('connect')
+def test_connect():
+    print("connect")
+    emit('after connect',  {'data':'Lets dance'})
+
+@socketio.on('message')
+def handle_message(message):
+    mh.save_message(message)
+    emit("messageResponse", {'data': message['text'], 'sender': message['sender'], 'recipient': message['recipient']})
 
 @app.route("/user_instruments/<int:user_id>", methods=["GET", "POST", "DELETE"])
 def user_instruments(user_id):

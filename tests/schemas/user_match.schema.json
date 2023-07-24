@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": [
+    {
+      "type": "object",
+      "properties": {
+        "match": {
+          "type": "object",
+          "properties": {
+            "accepted": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "match_id": {
+              "type": "integer"
+            },
+            "seen": {
+              "type": "boolean"
+            },
+            "user_id": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "accepted",
+            "id",
+            "match_id",
+            "seen",
+            "user_id"
+          ]
+        },
+        "user": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "is_active": {
+              "type": "boolean"
+            },
+            "is_admin": {
+              "type": "boolean"
+            },
+            "is_band": {
+              "type": "boolean"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "email",
+            "first_name",
+            "id",
+            "is_active",
+            "is_admin",
+            "is_band",
+            "last_name",
+            "username"
+          ]
+        }
+      },
+      "required": [
+        "match",
+        "user"
+      ]
+    }
+  ]
+}
