@@ -75,13 +75,15 @@ def change_password():
 # @login_required
 def get_user_role():
     api_wrapper = auth0_wrapper.Auth0ApiWrapper()
-    db_user = User.query.filter_by(email=request.args["email"])
     data = {
-        "role": api_wrapper.get_user_role(request.args["id"]),
-        "db_user": db_user.first().serialize(),
+        "role": api_wrapper.get_user_role(request.args["id"])
     }
     return jsonify(data)
 
+@app.route("/user", methods=["GET"])
+def get_user():
+    user = User.query.filter_by(email=request.args.get("email")).all()
+    return format_response(200, serialize_query_result(user))
 
 @app.route("/get_roles", methods=["GET"])
 @login_required
