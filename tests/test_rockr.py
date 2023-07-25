@@ -10,7 +10,7 @@ from rockr.models import (
     UserGoal,
     MatchProfile,
     UserMatch,
-    Message
+    Message,
 )
 import rockr.auth0.auth0_api_wrapper as auth0
 import pytest
@@ -180,27 +180,26 @@ class MyTest(TestCase):
         assert isinstance(g.description, str)
         assert isinstance(g.id, int)
 
-    def test_messages(self): 
+    def test_messages(self):
         ct = Message.query.count()
         assert ct > 0
 
         m = Message.query.first()
-        assert(isinstance(m.id, int))
-        assert(isinstance(m.sender_id, int))
-        assert(isinstance(m.recipient_id, int))
-        assert(isinstance(m.message, str))
-    
+        assert isinstance(m.id, int)
+        assert isinstance(m.sender_id, int)
+        assert isinstance(m.recipient_id, int)
+        assert isinstance(m.message, str)
+
     def test_matches(self):
         ct = UserMatch.query.count()
         assert ct > 0
 
         m = UserMatch.query.first()
-        assert(isinstance(m.id, int))
-        assert(isinstance(m.user_id, int))
-        assert(isinstance(m.match_id, int))
-        assert(isinstance(m.accepted, bool))
-        assert(isinstance(m.seen, bool))
-
+        assert isinstance(m.id, int)
+        assert isinstance(m.user_id, int)
+        assert isinstance(m.match_id, int)
+        assert isinstance(m.accepted, bool)
+        assert isinstance(m.seen, bool)
 
     def test_create_user_instruments(self):
         woodwind_instrument = Instrument.query.filter_by(type="woodwind").first()
