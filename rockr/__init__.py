@@ -5,9 +5,10 @@ from sqlalchemy import URL
 from flask_migrate import Migrate
 from .settings import DATABASE_CONFIG
 from flask_socketio import SocketIO
+from flask_login import LoginManager
 
 db = SQLAlchemy()
-
+login_manager = LoginManager()
 migrate = None
 
 
@@ -17,9 +18,6 @@ def create_app(test_config=None):
     socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
     CORS(app, origins=["http://localhost:3000"])
 
-
-
-    # CITE: https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/quickstart/
     # configure the database
     if test_config is not None:
         url_object = URL.create(**test_config["db_uri"])
@@ -37,6 +35,7 @@ def create_app(test_config=None):
 
 
 app, socketio = create_app()
-
+login_manager.init_app(app)
+app.secret_key = settings.FLASK_LOGIN_SECRET_KEY
 # import here to avoid circular imports. Not a great practice, but docs say it's okay
 import rockr.views
