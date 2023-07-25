@@ -78,9 +78,7 @@ def get_user_role():
     db_user = User.query.filter_by(email=request.args["email"])
     data = {
         "role": api_wrapper.get_user_role(request.args["id"]),
-        "db_user": db_user
-        .first()
-        .serialize(),
+        "db_user": db_user.first().serialize(),
     }
     return jsonify(data)
 
@@ -92,31 +90,43 @@ def get_roles():
     return format_response(resp["status"], resp["data"])
 
 
-@app.route('/matches', methods=["GET"])
+@app.route("/matches", methods=["GET"])
 @login_required
 def get_matches():
-    user = User.query.filter_by(email=request.args.get("email")).first();
-    matches = db.session.query(User, UserMatch).join(User, User.id == UserMatch.user_id).filter(UserMatch.match_id == user.id).all()
+    user = User.query.filter_by(email=request.args.get("email")).first()
+    matches = (
+        db.session.query(User, UserMatch)
+        .join(User, User.id == UserMatch.user_id)
+        .filter(UserMatch.match_id == user.id)
+        .all()
+    )
     return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
 
 
-@app.route('/messages', methods=["GET"])
+@app.route("/messages", methods=["GET"])
 @login_required
 def get_messages():
     messages = Message.query.all()
     return format_response(200, serialize_query_result(messages))
 
 
-@socketio.on('connect')
+@socketio.on("connect")
 def test_connect():
     print("connect")
-    emit('after connect',  {'data':'Lets dance'})
+    emit("after connect", {"data": "Lets dance"})
 
 
-@socketio.on('message')
+@socketio.on("message")
 def handle_message(message):
     mh.save_message(message)
-    emit("messageResponse", {'data': message['text'], 'sender': message['sender'], 'recipient': message['recipient']})
+    emit(
+        "messageResponse",
+        {
+            "data": message["text"],
+            "sender": message["sender"],
+            "recipient": message["recipient"],
+        },
+    )
 
 
 @app.route("/user_instruments/<int:user_id>", methods=["GET", "POST", "DELETE"])

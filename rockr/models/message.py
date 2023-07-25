@@ -17,7 +17,7 @@ class Message(SerializerMixin, db.Model):
     ts = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, message):
-        self.sender_id = message['sender_id']
-        self.recipient_id = message['recipient_id']
-        self.message = message['message']
-        self.ts = message['ts']
+        self.sender_id = message["sender_id"]
+        self.recipient_id = message["recipient_id"]
+        self.message = message["message"]
+        self.ts = message["ts"]

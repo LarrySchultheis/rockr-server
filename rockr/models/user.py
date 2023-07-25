@@ -13,7 +13,9 @@ class User(SerializerMixin, db.Model):
     is_paused = db.Column(db.Boolean, default=False, nullable=False)
     is_band = db.Column(db.Boolean, default=False, nullable=False)
     is_authenticated = db.Column(db.Boolean, default=False, nullable=False)
-    is_active = db.Column(db.Boolean, default=False, nullable=False)  # tied to flask login
+    is_active = db.Column(
+        db.Boolean, default=False, nullable=False
+    )  # tied to flask login
     is_anonymous = db.Column(db.Boolean, default=False, nullable=False)
 
     def __init__(self, user):
