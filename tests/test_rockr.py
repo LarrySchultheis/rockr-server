@@ -41,7 +41,7 @@ class MyTest(TestCase):
         # pass in test configuration
         return create_app(test_config={
             "db_uri": settings.TEST_DATABASE_CONFIG
-        })[0]
+        })
 
     def setUp(self):
         self.test_user = self.get_test_user()
