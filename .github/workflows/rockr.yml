@@ -48,6 +48,7 @@ jobs:
             cd /etc/rockr/
             sudo rm -rf rockr-server
             sudo git clone https://github.com/LarrySchultheis/rockr-server.git
+            cd rockr-server
             sudo git checkout master &&
             sudo git fetch --all &&
             sudo git reset --hard origin/master &&
