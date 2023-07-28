@@ -43,6 +43,12 @@ def serialize_tuple_list(result, keys):
     return jsonify(return_lst).json
 
 
+# for PATCHing GroupAPI
+def update_group(model_inst, **kwargs):
+    for k, v in kwargs.items():
+        if hasattr(model_inst, k):
+            setattr(model_inst, k, v)
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
@@ -59,7 +65,7 @@ def login():
     usr = load_user(request.args["email"])
     success = login_user(usr)
     if success:
-        return "success", 200
+        return format_response(200, usr.serialize())
     else:
         return "error", 401
 
@@ -72,7 +78,6 @@ def change_password():
 
 
 @app.route("/get_user_role", methods=["GET"])
-# @login_required
 def get_user_role():
     api_wrapper = auth0_wrapper.Auth0ApiWrapper()
     data = {
@@ -80,10 +85,6 @@ def get_user_role():
     }
     return jsonify(data)
 
-@app.route("/user", methods=["GET"])
-def get_user():
-    user = User.query.filter_by(email=request.args.get("email")).all()
-    return format_response(200, serialize_query_result(user))
 
 @app.route("/get_roles", methods=["GET"])
 @login_required
@@ -293,6 +294,17 @@ class GroupAPI(MethodView):
             api_wrapper.create_auth0_account(item)
 
         return jsonify(item.serialize())
+
+    def patch(self):
+        resp = []
+        items = json.loads(request.data)
+        for item_dict in items:
+            if "id" in item_dict.keys():
+                obj = self.model.query.get(item_dict["id"])
+                obj.update(**item_dict)
+                db.session.commit()
+                resp.append(self.model.query.get(item_dict["id"]))
+        return serialize_query_result(resp)
 
 
 def register_api(app, model, name):
