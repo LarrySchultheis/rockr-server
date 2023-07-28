@@ -28,7 +28,7 @@ jobs:
       run: | 
         echo ${{secrets.SETTINGS}} | base64 -d > rockr/settings.py
         pytest -v --cov=rockr tests
-  deploy:
+  Deploy:
     needs: build
     runs-on: ubuntu-latest
     
@@ -36,13 +36,13 @@ jobs:
       - uses: actions/checkout@v2 
       - name: Deploy in EC2
         env:
-            PRIVATE_KEY: ${{ secrets.EC2_KEY  }}
-            HOSTNAME : ${{ secrets.EC2_DOMAIN  }}
-            USER_NAME : ${{ secrets.EC2_USER  }}
+            PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
+            HOSTNAME : ${{ secrets.HOSTNAME  }}
+            USER_NAME : ${{ secrets.USER_NAME  }}
             
         run: |
-          echo "${PRIVATE_KEY}" > rockr-server.pem && chmod 400 rockr-server.pem
-          ssh -o StrictHostKeyChecking=no -i rockr-server.pem ${USER_NAME}@${HOSTNAME} '
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
             #Now we have got the access of EC2 and we will start the deploy .
             cd /etc/rockr/rockr-server &&
@@ -50,5 +50,5 @@ jobs:
             git fetch --all &&
             git reset --hard origin/master &&
             git pull origin master
-            pip install -r requirements.txt   
-        '
+            pip install -r requirements.txt
+          '
