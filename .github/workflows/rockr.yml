@@ -45,9 +45,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
             #Now we have got the access of EC2 and we will start the deploy .
-            cd /etc/rockr/rockr-server &&
-            git checkout master &&
-            git fetch --all &&
-            git reset --hard origin/master &&
-            git pull origin master
+            cd /etc/rockr/
+            sudo rm -rf rockr-server
+            sudo git clone https://github.com/LarrySchultheis/rockr-server.git
+            sudo git checkout master &&
+            sudo git fetch --all &&
+            sudo git reset --hard origin/master &&
+            sudo git pull origin master
           '
