@@ -41,7 +41,7 @@ jobs:
             USER_NAME : ${{ secrets.EC2_USER  }}
             
         run: |
-          echo "$PRIVATE_KEY" > rockr-server.pem && chmod 400 rockr-server.pem
+          echo "${PRIVATE_KEY}" > rockr-server.pem && chmod 400 rockr-server.pem
           ssh -o StrictHostKeyChecking=no -i rockr-server.pem ${USER_NAME}@${HOSTNAME} '
           
             #Now we have got the access of EC2 and we will start the deploy .
