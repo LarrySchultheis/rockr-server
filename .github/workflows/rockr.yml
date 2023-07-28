@@ -42,13 +42,12 @@ jobs:
             
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -i private_key ${USER_NAME}@${HOSTNAME} '
+          ssh -i private_key ${USER_NAME}@${HOSTNAME}
           
-            #Now we have got the access of EC2 and we will start the deploy .
-            cd /etc/rockr/rockr-server &&
-            git checkout master &&
-            git fetch --all &&
-            git reset --hard origin/master &&
-            git pull origin master
-            pip install -r requirements.txt
-          '
+          #Now we have got the access of EC2 and we will start the deploy .
+          cd /etc/rockr/rockr-server &&
+          git checkout master &&
+          git fetch --all &&
+          git reset --hard origin/master &&
+          git pull origin master
+          pip install -r requirements.txt
