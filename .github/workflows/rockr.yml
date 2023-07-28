@@ -46,8 +46,8 @@ jobs:
           
           #Now we have got the access of EC2 and we will start the deploy .
           cd /etc/rockr/rockr-server &&
-          git checkout master &&
+          git checkout development &&
           git fetch --all &&
-          git reset --hard origin/master &&
-          git pull origin master
+          git reset --hard origin/development &&
+          git pull origin development
           pip install -r requirements.txt
