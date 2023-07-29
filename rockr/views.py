@@ -214,7 +214,7 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
-@app.route("/user_band/<int:user_id>", methods=["GET", "POST", "DELETE"])
+@app.route("/user_band/<int:user_id>", methods=["GET", "POST", "DELETE", "PATCH"])
 def user_band(user_id):
     if request.method == "GET":
         ub = UserBand.query.filter_by(user_id=user_id)
@@ -222,7 +222,7 @@ def user_band(user_id):
         return format_response(200, serialize_query_result(bandsids))
     # For a new User Band Adding Query
     elif request.method == "POST":
-        db_manager.insert(UserBand(user_id=user_id, band_id=request.args["id"]))
+        db_manager.insert(UserBand(user_id=user_id, band_id=request.args["id"], is_verified=False))
         return format_response(201, None)
     elif request.method == "DELETE":
         ub = UserBand.query.filter_by(
@@ -230,7 +230,12 @@ def user_band(user_id):
         ).first()
         db_manager.delete(ub)
         return format_response(204, None)
-
+    elif request.method == "PATCH":
+        ub = UserBand.query.filter_by(
+            user_id=user_id, band_id=int(request.args["id"])
+        ).first()
+        ItemAPI.patch(ub)
+        return format_response(200, None)
 
 @app.route("/check_match_profile/<int:user_id>", methods=["GET"])
 def check_match_profile(user_id):
