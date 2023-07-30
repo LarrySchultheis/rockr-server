@@ -78,6 +78,7 @@ def change_password():
 
 
 @app.route("/get_user_role", methods=["GET"])
+# @login_required
 def get_user_role():
     api_wrapper = auth0_wrapper.Auth0ApiWrapper()
     data = {
