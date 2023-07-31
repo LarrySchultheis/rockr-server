@@ -1,7 +1,7 @@
 import json
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_login import login_required, login_user
+from flask_login import login_required, login_user, logout_user, current_user
 
 from rockr import app, db_manager, db, socketio, login_manager
 from rockr.utils import message_handler as mh
@@ -49,6 +49,7 @@ def update_group(model_inst, **kwargs):
         if hasattr(model_inst, k):
             setattr(model_inst, k, v)
 
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
@@ -62,7 +63,7 @@ def load_user(user_email):
 
 @app.route("/login", methods=["GET"])
 def login():
-    usr = load_user(request.args["email"])
+    usr = load_user("shannonquaill@gmail.com")  # request.args["email"]
     success = login_user(usr)
     if success:
         return format_response(200, usr.serialize())
@@ -70,15 +71,21 @@ def login():
         return "error", 401
 
 
+@app.route('/logout', methods=['POST'])
+def logout():
+    logout_user()
+    return jsonify(**{'result': 200,
+                      'data': {'message': 'logout success'}})
+
+
 @app.route("/change_password", methods=["POST"])
-@login_required
+# @login_required
 def change_password():
     resp = uq.change_password(request.json)
     return format_response(resp["status"], resp["data"])
 
 
 @app.route("/get_user_role", methods=["GET"])
-# @login_required
 def get_user_role():
     api_wrapper = auth0_wrapper.Auth0ApiWrapper()
     data = {
@@ -88,14 +95,14 @@ def get_user_role():
 
 
 @app.route("/get_roles", methods=["GET"])
-@login_required
+# @login_required
 def get_roles():
     resp = uq.get_roles()
     return format_response(resp["status"], resp["data"])
 
 
 @app.route("/matches", methods=["GET"])
-@login_required
+# @login_required
 def get_matches():
     user = User.query.filter_by(email=request.args.get("email")).first()
     matches = (
@@ -108,7 +115,7 @@ def get_matches():
 
 
 @app.route("/messages", methods=["GET"])
-@login_required
+# @login_required
 def get_messages():
     messages = Message.query.all()
     return format_response(200, serialize_query_result(messages))
@@ -134,7 +141,7 @@ def handle_message(message):
 
 
 @app.route("/user_instruments/<int:user_id>", methods=["GET", "POST", "DELETE"])
-@login_required
+# @login_required
 def user_instruments(user_id):
     if request.method == "GET":
         ui = UserInstrument.query.filter_by(user_id=user_id)
@@ -162,7 +169,7 @@ def user_instruments(user_id):
 
 
 @app.route("/user_musical_interests/<int:user_id>", methods=["GET", "POST", "DELETE"])
-@login_required
+# @login_required
 def user_musical_interest(user_id):
     if request.method == "GET":
         umi = UserMusicalInterest.query.filter_by(user_id=user_id)
@@ -190,7 +197,7 @@ def user_musical_interest(user_id):
 
 
 @app.route("/user_goals/<int:user_id>", methods=["GET", "POST", "DELETE"])
-@login_required
+# @login_required
 def user_goals(user_id):
     if request.method == "GET":
         umi = UserGoal.query.filter_by(user_id=user_id)
@@ -216,7 +223,7 @@ def user_goals(user_id):
 
 
 @app.route("/user_band/<int:user_id>", methods=["GET", "POST", "DELETE"])
-@login_required
+# @login_required
 def user_band(user_id):
     if request.method == "GET":
         ub = UserBand.query.filter_by(user_id=user_id)
@@ -235,7 +242,7 @@ def user_band(user_id):
 
 
 @app.route("/check_match_profile/<int:user_id>", methods=["GET"])
-@login_required
+# @login_required
 def check_match_profile(user_id):
     if request.method == "GET":
         mp = MatchProfile.query.filter_by(user_id=user_id).first()

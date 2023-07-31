@@ -1,8 +1,9 @@
 from rockr import db
 from .mixins import SerializerMixin
+from flask_login import UserMixin
 
 
-class User(SerializerMixin, db.Model):
+class User(SerializerMixin, UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(128), unique=True, nullable=False)
@@ -28,4 +29,4 @@ class User(SerializerMixin, db.Model):
         self.is_band = user["is_band"]
 
     def get_id(self):
-        return self.email
+        return self.id

@@ -35,6 +35,7 @@ def create_app(test_config=None):
 
 app = create_app()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
 app.secret_key = settings.FLASK_LOGIN_SECRET_KEY
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
 
