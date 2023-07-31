@@ -290,6 +290,9 @@ class GroupAPI(MethodView):
         self.model = model
 
     def get(self):
+        if request.args.get("email"):
+            item = self.model.query.filter_by(email=request.args.get("email")).first()
+            return jsonify(item.serialize())
         items = self.model.query.all()
         return jsonify([item.serialize() for item in items])
 
