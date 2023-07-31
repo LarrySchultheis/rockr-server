@@ -10,7 +10,7 @@ from rockr.models import (
     UserGoal,
     MatchProfile,
     UserMatch,
-    Message
+    Message,
 )
 import rockr.auth0.auth0_api_wrapper as auth0
 import pytest
@@ -29,7 +29,7 @@ MOCK_USER = {
     "username": ":)))))",
     "password": "superW3akP@ssword",
     "is_admin": False,
-    "is_active": False,
+    "is_paused": False,
     "is_band": False,
 }
 
@@ -69,7 +69,7 @@ class MyTest(TestCase):
         assert isinstance(usr.id, int)
         assert isinstance(usr.email, str)
         assert isinstance(usr.is_admin, bool)
-        assert isinstance(usr.is_active, bool)
+        assert isinstance(usr.is_paused, bool)
         assert isinstance(usr.is_band, bool)
 
     def test_update_user_account(self):
@@ -85,7 +85,7 @@ class MyTest(TestCase):
                 "email": "ttchilders@msn.net",
                 "username": "ttchilds",
                 "is_admin": not usr.is_admin,
-                "is_active": not usr.is_active,
+                "is_paused": not usr.is_paused,
                 "is_band": not usr.is_band,
             }
         )
@@ -97,7 +97,7 @@ class MyTest(TestCase):
         assert updated_user.email == "ttchilders@msn.net"
         assert updated_user.username == "ttchilds"
         assert updated_user.is_admin != user_copy["is_admin"]
-        assert updated_user.is_active != user_copy["is_active"]
+        assert updated_user.is_paused != user_copy["is_paused"]
         assert updated_user.is_band != user_copy["is_band"]
 
         # Restore balance to the force
@@ -106,7 +106,7 @@ class MyTest(TestCase):
         self.test_user.email = user_copy["email"]
         self.test_user.username = user_copy["username"]
         self.test_user.is_admin = user_copy["is_admin"]
-        self.test_user.is_active = user_copy["is_active"]
+        self.test_user.is_paused = user_copy["is_paused"]
         self.test_user.is_band = user_copy["is_band"]
         db.session.commit()
 
@@ -131,7 +131,7 @@ class MyTest(TestCase):
         assert user.last_name == MOCK_USER["last_name"]
         assert user.username == MOCK_USER["username"]
         assert user.is_admin == MOCK_USER["is_admin"]
-        assert user.is_active == MOCK_USER["is_active"]
+        assert user.is_paused == MOCK_USER["is_paused"]
         assert user.is_band == MOCK_USER["is_band"]
         assert User.query.filter_by(email=MOCK_USER["email"]).count() == 1
 
@@ -144,9 +144,9 @@ class MyTest(TestCase):
         assert usr.last_name == "ME"
         assert usr.email == "testmebby@yahoooooo.com"
         assert usr.username == ":)))))"
-        assert usr.is_admin == False
-        assert usr.is_active == False
-        assert usr.is_band == False
+        assert not usr.is_admin
+        assert not usr.is_paused
+        assert not usr.is_band
 
     @pytest.mark.order(3)
     def test_delete_user(self):
@@ -180,27 +180,26 @@ class MyTest(TestCase):
         assert isinstance(g.description, str)
         assert isinstance(g.id, int)
 
-    def test_messages(self): 
+    def test_messages(self):
         ct = Message.query.count()
         assert ct > 0
 
         m = Message.query.first()
-        assert(isinstance(m.id, int))
-        assert(isinstance(m.sender_id, int))
-        assert(isinstance(m.recipient_id, int))
-        assert(isinstance(m.message, str))
-    
+        assert isinstance(m.id, int)
+        assert isinstance(m.sender_id, int)
+        assert isinstance(m.recipient_id, int)
+        assert isinstance(m.message, str)
+
     def test_matches(self):
         ct = UserMatch.query.count()
         assert ct > 0
 
         m = UserMatch.query.first()
-        assert(isinstance(m.id, int))
-        assert(isinstance(m.user_id, int))
-        assert(isinstance(m.match_id, int))
-        assert(isinstance(m.accepted, bool))
-        assert(isinstance(m.seen, bool))
-
+        assert isinstance(m.id, int)
+        assert isinstance(m.user_id, int)
+        assert isinstance(m.match_id, int)
+        assert isinstance(m.accepted, bool)
+        assert isinstance(m.seen, bool)
 
     def test_create_user_instruments(self):
         woodwind_instrument = Instrument.query.filter_by(type="woodwind").first()

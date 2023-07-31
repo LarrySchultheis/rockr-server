@@ -1,4 +1,4 @@
-from flask import jsonify
+import json
 
 
 class SerializerMixin:
@@ -8,10 +8,9 @@ class SerializerMixin:
         as_dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         return as_dict
 
-    def deserialize(self):
-        pass
+    def deserialize(self, **kwargs):
+        return json.loads(**kwargs)
 
-    # doesn't go here semantically, but use for PATCH requests
     def update(self, **kwargs):
         for k, v in kwargs.items():
             if hasattr(self, k):

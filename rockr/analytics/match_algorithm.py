@@ -22,7 +22,7 @@ def match_algorithm(instrumentids, musicinterestids, goalids):
 
     # Get all the users for the Algorithm to sort through, that are not admins, are active, and are not bands
     match_users = User.query.filter_by(
-        is_admin=False, is_active=True, is_band=False
+        is_admin=False, is_paused=False, is_band=False
     ).all()
     # Loop through the returned users
     for matched_user in match_users:
