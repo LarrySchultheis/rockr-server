@@ -1,8 +1,5 @@
-from flask import request
-from rockr import db, auth, app, db_manager
 from rockr.models import (
     User,
-    MatchProfile,
     UserInstrument,
     UserMusicalInterest,
     UserGoal,

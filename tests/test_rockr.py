@@ -1,5 +1,5 @@
 from flask_testing import TestCase
-from rockr import create_app, db, settings, views, db_manager
+from rockr import create_app, db, settings, db_manager
 from rockr.models import (
     User,
     MusicalInterest,
@@ -17,6 +17,7 @@ import pytest
 
 # The Child Man
 TEST_USER_ID = 202
+TEST_MATCH_ID = 5
 ADMIN_TEST_USER_ID = 1
 
 TEST_USER_AUTH0_ID = "auth0|647658e08c3b4001e6e0ae70"
@@ -314,3 +315,16 @@ class MyTest(TestCase):
         mock_patch_is_active = {"is_active": True}
         usr.update(**mock_patch_is_active)
         assert usr.is_active
+
+    def test_user_responds_to_match(self):
+        usr = User.query.get(TEST_USER_ID)
+        match = User.query.get(TEST_MATCH_ID)
+
+        usr_match = UserMatch(user_id=usr.id, match_id=match.id)
+        usr_match.accepted = True
+        db.session.commit()
+        assert usr_match.accepted
+
+        usr_match.accepted = False
+        db.session.commit()
+        assert not usr_match.accepted
