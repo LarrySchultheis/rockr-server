@@ -5,7 +5,7 @@ from rockr import settings, db
 
 class Auth0ApiWrapper:
     def __init__(self):
-        self.settings = settings
+        self.settings = settings.AUTH0_PROD if settings.ENVIRIONMENT  == "production" else settings.AUTH0_DEV
         self.http = urllib3.PoolManager()
         self.token = AuthToken.query.all()[0]
         self._validate_token()
@@ -26,13 +26,13 @@ class Auth0ApiWrapper:
     def _refresh_api_token(self):
         resp = self.http.request(
             "POST",
-            self.settings.TOKEN_URL,
+            self.settings["token_url"],
             headers={"content-type": "application/json"},
             body=json.dumps(
                 {
-                    "client_id": self.settings.CLIENT_ID,
-                    "client_secret": self.settings.CLIENT_SECRET,
-                    "audience": self.settings.AUTH0_URL,
+                    "client_id": self.settings["client_id"],
+                    "client_secret": self.settings["client_secret"],
+                    "audience": self.settings["auth0_url"],
                     "grant_type": "client_credentials",
                 }
             ),
@@ -42,7 +42,7 @@ class Auth0ApiWrapper:
     def get_user_role(self, user_id):
         resp = self.http.request(
             "GET",
-            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            f"{self.settings['auth0_url']}users/{user_id}/roles",
             headers={"Authorization": f"Bearer {self.token.token}"},
         )
         return json.loads(resp.data)
@@ -50,7 +50,7 @@ class Auth0ApiWrapper:
     def create_auth0_account(self, user):
         resp = self.http.request(
             "POST",
-            f"{self.settings.AUTH0_URL}users",
+            f"{self.settings['auth0_url']}users",
             headers={
                 "Authorization": f"Bearer {self.token.token}",
                 "Content-type": "application/json",
@@ -80,7 +80,7 @@ class Auth0ApiWrapper:
         role_id = [r["id"] for r in roles if r["name"] == "Admin"][0]
         resp = self.http.request(
             "POST",
-            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            f"{self.settings['auth0_url']}users/{user_id}/roles",
             headers={
                 "Authorization": f"Bearer {self.token.token}",
                 "Content-type": "application/json",
@@ -94,7 +94,7 @@ class Auth0ApiWrapper:
         role_id = [r["id"] for r in roles if r["name"] == "Band"][0]
         resp = self.http.request(
             "POST",
-            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            f"{self.settings['auth0_url']}users/{user_id}/roles",
             headers={
                 "Authorization": f"Bearer {self.token.token}",
                 "Content-type": "application/json",
@@ -108,7 +108,7 @@ class Auth0ApiWrapper:
         role_id = [r["id"] for r in roles if r["name"] == "Basic User"][0]
         resp = self.http.request(
             "POST",
-            f"{self.settings.AUTH0_URL}users/{user_id}/roles",
+            f"{self.settings['auth0_url']}users/{user_id}/roles",
             headers={
                 "Authorization": f"Bearer {self.token.token}",
                 "Content-type": "application/json",
@@ -120,7 +120,7 @@ class Auth0ApiWrapper:
     def get_roles(self):
         resp = self.http.request(
             "GET",
-            f"{self.settings.AUTH0_URL}roles",
+            f"{self.settings['auth0_url']}roles",
             headers={"Authorization": f"Bearer {self.token.token}"},
         )
         return {"status": resp.status, "data": json.loads(resp.data)}
@@ -129,7 +129,7 @@ class Auth0ApiWrapper:
         user = self.get_users_by_email(email)[0]
         resp = self.http.request(
             "DELETE",
-            f"{self.settings.AUTH0_URL}users/{user['user_id']}",
+            f"{self.settings['auth0_url']}users/{user['user_id']}",
             headers={"Authorization": f"Bearer {self.token.token}"},
         )
         return resp.status
@@ -137,7 +137,7 @@ class Auth0ApiWrapper:
     def get_users_by_email(self, email):
         resp = self.http.request(
             "GET",
-            f"{self.settings.AUTH0_URL}users-by-email?email={email}",
+            f"{self.settings['auth0_url']}users-by-email?email={email}",
             headers={"Authorization": f"Bearer {self.token.token}"},
         )
         return json.loads(resp.data)
@@ -146,7 +146,7 @@ class Auth0ApiWrapper:
         user_id = self.get_users_by_email(user["email"])[0]["user_id"]
         resp = self.http.request(
             "PATCH",
-            f"{self.settings.AUTH0_URL}users/{user_id}",
+            f"{self.settings['auth0_url']}users/{user_id}",
             headers={
                 "Authorization": f"Bearer {self.token.token}",
                 "Content-type": "application/json",
