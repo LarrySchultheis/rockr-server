@@ -9,7 +9,6 @@ import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0_wrapper
 from flask_socketio import emit
 from rockr.models import (
-    Band,
     Goal,
     Instrument,
     MatchProfile,
@@ -237,14 +236,22 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
+@app.route("/user_band", methods=["GET"])
 @app.route("/user_band/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
 # @login_required
-def user_band(band_id):
+def user_band(band_id=None):
     # a band is a user with is_band=True
     if request.method == "GET":
+        # check for invitations for a user account
+        if not band_id:
+            user_id = request.args.get("user")
+            band_invites = UserBand.query.filter_by(user_id=user_id, seen=False)
+            return jsonify(serialize_query_result(band_invites))
+        # get all band members for band account
         ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True)
-        bands_ids = [User.query.get(u.user_id) for u in ub]
-        return format_response(200, serialize_query_result(bands_ids))
+        bands_member_ids = [User.query.get(u.user_id) for u in ub]
+        return format_response(200, serialize_query_result(bands_member_ids))
+
     elif request.method == "POST":
         user_query = UserBand.query.filter_by(band_id=band_id, user_id=request.json["params"]["user_id"])
         if user_query.count() == 0:
@@ -252,11 +259,13 @@ def user_band(band_id):
             db_manager.insert(ub)
             return jsonify(ub.serialize())
         return jsonify(user_query.first().serialize())
+
     elif request.method == "PATCH":
         ub = UserBand.query.filter_by(band_id=band_id, user_id=request.json["params"]["user_id"]).first()
         ub.update(**request.json["params"])
         db.session.commit()
         return jsonify(ub.serialize())
+
     elif request.method == "DELETE":
         ub = UserBand.query.filter_by(
             band_id=band_id, user_id=int(request.args["user"])
@@ -283,6 +292,16 @@ def check_match_profile(user_id):
             db_manager.insert(MatchProfile(user_id=user_id))
         return {"is_match_profile_complete": mp.is_complete}
 
+
+@app.route("/bands/<int:user_id>", methods=["GET"])
+# @login_required
+def bands(user_id):
+    if request.method == "GET":
+        mp = MatchProfile.query.filter_by(user_id=user_id).first()
+        if not mp:
+            mp = MatchProfile(user_id=user_id)
+            db_manager.insert(MatchProfile(user_id=user_id))
+        return {"is_match_profile_complete": mp.is_complete}
 
 class ItemAPI(MethodView):
     decorators = [login_required]
