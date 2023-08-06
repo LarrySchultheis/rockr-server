@@ -137,6 +137,7 @@ def handle_message(message):
             "sender": message["sender"],
             "recipient": message["recipient"],
         },
+        broadcast=True
     )
 
 
