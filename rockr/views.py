@@ -293,15 +293,13 @@ def check_match_profile(user_id):
         return {"is_match_profile_complete": mp.is_complete}
 
 
-@app.route("/bands/<int:user_id>", methods=["GET"])
+@app.route("/bands", methods=["GET"])
 # @login_required
-def bands(user_id):
-    if request.method == "GET":
-        mp = MatchProfile.query.filter_by(user_id=user_id).first()
-        if not mp:
-            mp = MatchProfile(user_id=user_id)
-            db_manager.insert(MatchProfile(user_id=user_id))
-        return {"is_match_profile_complete": mp.is_complete}
+def bands():
+    band_users = User.query.filter_by(is_band=True)
+    band_users_dict = {b.id: b.serialize() for b in band_users}
+    return jsonify(band_users_dict)
+
 
 class ItemAPI(MethodView):
     decorators = [login_required]
