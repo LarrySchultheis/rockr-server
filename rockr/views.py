@@ -63,14 +63,14 @@ def load_user(user_email):
 
 @app.route("/login", methods=["GET"])
 def login():
-    usr = load_user("shannonquaill@gmail.com")  # request.args["email"]
-    success = login_user(usr)
-    if success:
-        return format_response(200, usr.serialize())
-    else:
-        return "error", 401
-
-
+    if "email" in request.args.keys():
+        usr = load_user(request.args["email"])
+        success = login_user(usr)
+        if success:
+            return  format_response(200, usr.serialize())
+        else:
+            return "error", 401
+        
 @app.route('/logout', methods=['POST'])
 def logout():
     logout_user()
