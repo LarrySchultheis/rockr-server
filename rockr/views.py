@@ -80,9 +80,10 @@ def login():
         usr = load_user(request.args["email"])
         success = login_user(usr)
         if success:
-            return  format_response(200, usr.serialize())
+            return format_response(200, usr.serialize())
         else:
             return "error", 401
+
 
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -274,12 +275,19 @@ def user_band(band_id=None):
         return format_response(204, None)
 
 
-@app.route("/user_matches/<int:user_id>", methods=["GET"])
+@app.route("/user_matches/<int:user_id>", methods=["GET", "PATCH"])
 # @login_required
 def user_matches(user_id):
-    matches = UserMatch.query.filter_by(user_id=user_id)
-    match_users = [User.query.get(m.match_id) for m in matches]
-    return serialize_query_result(match_users)
+    if request.method == "GET":
+        matches = UserMatch.query.filter_by(user_id=user_id, seen=False)
+        match_users = [User.query.get(m.match_id) for m in matches]
+        return serialize_query_result(match_users)
+
+    elif request.method == "PATCH":
+        um = UserMatch.query.filter_by(user_id=user_id, match_id=request.json["params"]["match_id"]).first()
+        um.update(**request.json["params"])
+        db.session.commit()
+        return jsonify(um.serialize())
 
 
 @app.route("/check_match_profile/<int:user_id>", methods=["GET"])
@@ -301,8 +309,22 @@ def bands():
     return jsonify(band_users_dict)
 
 
+@app.route("/match_profiles/<int:user_id>", methods=["GET", "PATCH"])
+# @login_required
+def match_profiles(user_id):
+    if request.method == "GET":
+        profile = MatchProfile.query.filter_by(user_id=user_id).first()
+        return jsonify(profile.serialize())
+
+    elif request.method == "PATCH":
+        mp = MatchProfile.query.filter_by(user_id=user_id).first()
+        mp.update(**request.json["params"])
+        db.session.commit()
+        return jsonify(mp.serialize())
+
+
 class ItemAPI(MethodView):
-    decorators = [login_required]
+    # decorators = [login_required]
     init_every_request = False
 
     def __init__(self, model):
