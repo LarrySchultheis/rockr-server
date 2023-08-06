@@ -10,6 +10,7 @@ from rockr.models import (
     UserGoal,
     MatchProfile,
     UserMatch,
+    UserBand,
     Message,
 )
 import rockr.auth0.auth0_api_wrapper as auth0
@@ -328,3 +329,35 @@ class MyTest(TestCase):
         usr_match.accepted = False
         db.session.commit()
         assert not usr_match.accepted
+
+    def test_user_bands(self):
+        assert UserBand.query.count() > 0
+        
+        b = UserBand.query.first()
+        assert isinstance(b.id, int)
+        assert isinstance(b.user_id, int)
+        assert isinstance(b.band_id, int)
+        assert isinstance(b.is_accepted, bool)
+        assert isinstance(b.seen, bool)
+
+    def test_band_users(self): 
+        ub = UserBand.query.first()
+        user = User.query.get(ub.user_id)
+        assert isinstance(user, User)  
+    
+    def test_band_invites(self):
+        assert UserBand.query.filter_by(seen=False).count() > 0
+        band_invite = UserBand.query.filter_by(seen=False).first()
+        user = User.query.get(band_invite.user_id)
+        assert isinstance(user, User)
+        assert band_invite.seen == False
+
+    def test_bands(self):
+        assert User.query.filter_by(is_band=True).count() > 0
+        band_user = User.query.filter_by(is_band=True).first()
+        assert isinstance(band_user, User)
+        assert UserBand.query.filter_by(band_id=band_user.id).count() == 1
+        band = UserBand.query.filter_by(band_id=band_user.id).first()
+        assert isinstance(band, UserBand);
+
+
