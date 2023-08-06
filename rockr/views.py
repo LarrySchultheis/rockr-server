@@ -81,11 +81,10 @@ def login():
         usr = load_user(request.args["email"])
         success = login_user(usr)
         if success:
-            return format_response(200, usr.serialize())
+            return  format_response(200, usr.serialize())
         else:
             return "error", 401
-
-
+        
 @app.route('/logout', methods=['POST'])
 def logout():
     logout_user()
@@ -152,6 +151,7 @@ def handle_message(message):
             "sender": message["sender"],
             "recipient": message["recipient"],
         },
+        broadcast=True
     )
 
 
