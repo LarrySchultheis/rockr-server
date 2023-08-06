@@ -12,4 +12,6 @@ class Band(SerializerMixin, db.Model):
 class UserBand(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
-    band_id = db.Column(db.Integer, db.ForeignKey(Band.id), nullable=False)
+    band_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    is_accepted = db.Column(db.Boolean, default=False, nullable=False)
+

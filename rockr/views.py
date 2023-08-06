@@ -1,7 +1,7 @@
 import json
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_login import login_required, login_user, logout_user, current_user
+from flask_login import login_required, login_user, logout_user
 
 from rockr import app, db_manager, db, socketio, login_manager
 from rockr.utils import message_handler as mh
@@ -22,6 +22,8 @@ from rockr.models import (
     UserMatch,
     UserMusicalInterest,
 )
+
+CURRENT_USER = None
 
 
 def format_response(status, data):
@@ -51,14 +53,26 @@ def update_group(model_inst, **kwargs):
 
 
 @app.route("/", methods=["GET"])
-@login_required
+# @login_required
 def index():
     return "Welcome to Rockr!"
 
 
 @login_manager.user_loader
+# @login_manager.request_loader
 def load_user(user_email):
-    return User.query.filter_by(email=user_email).first()
+    global CURRENT_USER
+    CURRENT_USER = User.query.filter_by(email=user_email).first()
+    return CURRENT_USER
+
+
+@login_manager.request_loader
+def load_user_from_request(request):
+    if CURRENT_USER:
+        user = User.query.get(CURRENT_USER.id)
+        if user:
+            return user
+    return None
 
 
 @app.route("/login", methods=["GET"])
@@ -123,7 +137,7 @@ def get_messages():
 
 @socketio.on("connect")
 def test_connect():
-    print("connect")
+    # print("connect")
     emit("after connect", {"data": "Lets dance"})
 
 
@@ -223,23 +237,40 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
-@app.route("/user_band/<int:user_id>", methods=["GET", "POST", "DELETE"])
+@app.route("/user_band/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
 # @login_required
-def user_band(user_id):
+def user_band(band_id):
+    # a band is a user with is_band=True
     if request.method == "GET":
-        ub = UserBand.query.filter_by(user_id=user_id)
-        bands_ids = [Band.query.get(b.band_id) for b in ub]
+        ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True)
+        bands_ids = [User.query.get(u.user_id) for u in ub]
         return format_response(200, serialize_query_result(bands_ids))
-    # For a new User Band Adding Query
     elif request.method == "POST":
-        db_manager.insert(UserBand(user_id=user_id, band_id=request.args["id"]))
-        return format_response(201, None)
+        user_query = UserBand.query.filter_by(band_id=band_id, user_id=request.json["params"]["user_id"])
+        if user_query.count() == 0:
+            ub = UserBand(band_id=band_id, user_id=request.json["params"]["user_id"])
+            db_manager.insert(ub)
+            return jsonify(ub.serialize())
+        return jsonify(user_query.first().serialize())
+    elif request.method == "PATCH":
+        ub = UserBand.query.filter_by(band_id=band_id, user_id=request.json["params"]["user_id"]).first()
+        ub.update(**request.json["params"])
+        db.session.commit()
+        return jsonify(ub.serialize())
     elif request.method == "DELETE":
         ub = UserBand.query.filter_by(
-            user_id=user_id, band_id=int(request.args["id"])
+            band_id=band_id, user_id=int(request.args["user"])
         ).first()
         db_manager.delete(ub)
         return format_response(204, None)
+
+
+@app.route("/user_matches/<int:user_id>", methods=["GET"])
+# @login_required
+def user_matches(user_id):
+    matches = UserMatch.query.filter_by(user_id=user_id)
+    match_users = [User.query.get(m.match_id) for m in matches]
+    return serialize_query_result(match_users)
 
 
 @app.route("/check_match_profile/<int:user_id>", methods=["GET"])
