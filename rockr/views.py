@@ -237,19 +237,33 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
-@app.route("/user_band", methods=["GET"])
-@app.route("/user_band/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
+@app.route("/user_bands", methods=["GET"])
+@app.route("/user_bands/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
 # @login_required
-def user_band(band_id=None):
+def user_bands(band_id=None):
     # a band is a user with is_band=True
     if request.method == "GET":
         # check for invitations for a user account
         if not band_id:
-            user_id = request.args.get("user")
-            band_invites = UserBand.query.filter_by(user_id=user_id, seen=False)
-            return jsonify(serialize_query_result(band_invites))
+            if request.args.get("user"):
+                user_id = request.args.get("user")
+                band_invites = UserBand.query.filter_by(user_id=user_id, seen=False)
+                return jsonify(serialize_query_result(band_invites))
+        # get potential band members for band invite modal (may the coding gods forgive my sins)
+        elif request.args.get("filter"):
+            um = UserMatch.query.filter_by(user_id=band_id, accepted=True)  # all accepted matches
+            ub = UserBand.query.filter_by(band_id=band_id)  # existing and pending band members
+            ub_ids = [b.user_id for b in ub]
+
+            potential_bands = []
+            for match in um:
+                if match.match_id not in ub_ids:
+                    u = User.query.get(match.match_id)
+                    potential_bands.append(u)
+            return serialize_query_result(potential_bands)
+
         # get all band members for band account
-        ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True)
+        ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True, seen=True)
         bands_member_ids = [User.query.get(u.user_id) for u in ub]
         return format_response(200, serialize_query_result(bands_member_ids))
 
