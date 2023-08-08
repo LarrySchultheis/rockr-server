@@ -78,11 +78,10 @@ def load_user_from_request(request):
 def login():
     if "email" in request.args.keys():
         usr = load_user(request.args["email"])
-        success = login_user(usr)
-        if success:
+        # success = login_user(usr)
+        if usr:
             return format_response(200, usr.serialize())
-        else:
-            return "error", 401
+    return "error", 401
 
 
 @app.route('/logout', methods=['POST'])
@@ -375,7 +374,8 @@ class GroupAPI(MethodView):
         self.model = model
 
     def get(self):
-        items = self.model.query.all()
+        sort_column = self.model.first_name if hasattr(self.model, "first_name") else self.model.id
+        items = self.model.query.order_by(sort_column.asc()).all()
         return jsonify([item.serialize() for item in items])
 
     def post(self):
