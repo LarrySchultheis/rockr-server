@@ -49,32 +49,35 @@ class Auth0ApiWrapper:
         return json.loads(resp.data)
 
     def create_auth0_account(self, user):
-        resp = self.http.request(
-            "POST",
-            f"{self.settings['auth0_url']}users",
-            headers={
-                "Authorization": f"Bearer {self.token.token}",
-                "Content-type": "application/json",
-            },
-            body=json.dumps(
-                {
-                    "email": user["email"],
-                    "name": f"{user['first_name']} {user['last_name']}",
-                    "verify_email": False,
-                    "password": user["password"],
-                    "connection": "Username-Password-Authentication",
-                }
-            ),
-        )
-        auth0_user = self.get_users_by_email(user["email"])
-        roles = self.get_roles()["data"]
-        if user["is_admin"]:
-            self._assign_admin(auth0_user, roles)
-        else:
-            self._assign_basic_user(auth0_user, roles)
-        if user["is_band"]:
-            self._assign_band(auth0_user, roles)
-        return {"status": resp.status, "data": resp.data}
+        try:
+            resp = self.http.request(
+                "POST",
+                f"{self.settings['auth0_url']}users",
+                headers={
+                    "Authorization": f"Bearer {self.token.token}",
+                    "Content-type": "application/json",
+                },
+                body=json.dumps(
+                    {
+                        "email": user["email"],
+                        "name": f"{user['first_name']} {user['last_name']}",
+                        "verify_email": False,
+                        "password": user["password"],
+                        "connection": "Username-Password-Authentication",
+                    }
+                ),
+            )
+            auth0_user = self.get_users_by_email(user["email"])
+            roles = self.get_roles()["data"]
+            if user["is_admin"]:
+                self._assign_admin(auth0_user, roles)
+            else:
+                self._assign_basic_user(auth0_user, roles)
+            if user["is_band"]:
+                self._assign_band(auth0_user, roles)
+            return {"status": resp.status, "data": resp.data}
+        except:
+            print("An exception occurred")
 
     def _assign_admin(self, user, roles):
         user_id = user[0]["user_id"]
@@ -119,39 +122,51 @@ class Auth0ApiWrapper:
         return {"status": resp.status, "data": resp.data}
 
     def get_roles(self):
-        resp = self.http.request(
-            "GET",
-            f"{self.settings['auth0_url']}roles",
-            headers={"Authorization": f"Bearer {self.token.token}"},
-        )
-        return {"status": resp.status, "data": json.loads(resp.data)}
+        try:
+            resp = self.http.request(
+                "GET",
+                f"{self.settings['auth0_url']}roles",
+                headers={"Authorization": f"Bearer {self.token.token}"},
+            )
+            return {"status": resp.status, "data": json.loads(resp.data)}
+        except:
+            print("An exception occurred")
 
     def delete_auth0_account(self, email):
-        user = self.get_users_by_email(email)[0]
-        resp = self.http.request(
-            "DELETE",
-            f"{self.settings['auth0_url']}users/{user['user_id']}",
-            headers={"Authorization": f"Bearer {self.token.token}"},
-        )
-        return resp.status
+        try:
+            user = self.get_users_by_email(email)[0]
+            resp = self.http.request(
+                "DELETE",
+                f"{self.settings['auth0_url']}users/{user['user_id']}",
+                headers={"Authorization": f"Bearer {self.token.token}"},
+            )
+            return resp.status
+        except:
+            print("An exception occurred")
 
     def get_users_by_email(self, email):
-        resp = self.http.request(
-            "GET",
-            f"{self.settings['auth0_url']}users-by-email?email={email}",
-            headers={"Authorization": f"Bearer {self.token.token}"},
-        )
-        return json.loads(resp.data)
+        try:
+            resp = self.http.request(
+                "GET",
+                f"{self.settings['auth0_url']}users-by-email?email={email}",
+                headers={"Authorization": f"Bearer {self.token.token}"},
+            )
+            return json.loads(resp.data)
+        except:
+            print("An exception occurred")
 
     def change_password(self, user):
-        user_id = self.get_users_by_email(user["email"])[0]["user_id"]
-        resp = self.http.request(
-            "PATCH",
-            f"{self.settings['auth0_url']}users/{user_id}",
-            headers={
-                "Authorization": f"Bearer {self.token.token}",
-                "Content-type": "application/json",
-            },
-            body=json.dumps({"password": user["password"]}),
-        )
-        return {"status": resp.status, "data": json.loads(resp.data)}
+        try:
+            user_id = self.get_users_by_email(user["email"])[0]["user_id"]
+            resp = self.http.request(
+                "PATCH",
+                f"{self.settings['auth0_url']}users/{user_id}",
+                headers={
+                    "Authorization": f"Bearer {self.token.token}",
+                    "Content-type": "application/json",
+                },
+                body=json.dumps({"password": user["password"]}),
+            )
+            return {"status": resp.status, "data": json.loads(resp.data)}
+        except:
+            print("An exception occurred")

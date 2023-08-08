@@ -311,7 +311,7 @@ def check_match_profile(user_id):
         mp = MatchProfile.query.filter_by(user_id=user_id).first()
         if not mp:
             mp = MatchProfile(user_id=user_id)
-            db_manager.insert(MatchProfile(user_id=user_id))
+            db_manager.insert(mp)
         return {"is_match_profile_complete": mp.is_complete}
 
 
@@ -379,14 +379,17 @@ class GroupAPI(MethodView):
         return jsonify([item.serialize() for item in items])
 
     def post(self):
-        item = self.model.deserialize(request.json)
-        db_manager.insert(item)
+        deserialized_payload = json.loads(request.data)
+        for key in deserialized_payload:
+            item_dict = deserialized_payload[key]
+            item = self.model(item_dict)
+            db_manager.insert(item)
 
-        if isinstance(item, User):
-            api_wrapper = auth0_wrapper.Auth0ApiWrapper()
-            api_wrapper.create_auth0_account(item)
+            if isinstance(item, User):
+                api_wrapper = auth0_wrapper.Auth0ApiWrapper()
+                api_wrapper.create_auth0_account(item)
 
-        return jsonify(item.serialize())
+        return format_response(201, None)
 
     def patch(self):
         resp = []
