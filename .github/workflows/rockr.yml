@@ -30,7 +30,7 @@ jobs:
   Deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/development'
     steps:
       - uses: actions/checkout@v2 
       - name: Deploy in EC2
@@ -43,13 +43,13 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           
-            #Now we have got the access of EC2 and we will start the deploy .
-            cd /etc/rockr/
-            sudo rm -rf rockr-server
-            sudo git clone https://github.com/LarrySchultheis/rockr-server.git
-            cd rockr-server
+            cd /etc/rockr/rockr-server
             sudo git checkout development &&
             sudo git fetch --all &&
             sudo git reset --hard origin/development &&
             sudo git pull origin development
+            # seeeeeeecrettttttsss
+            echo ${{secrets.SETTINGS}} | base64 -d > rockr/settings.py
+            # restart da server
+            pm2 restart rockr-server
           '
