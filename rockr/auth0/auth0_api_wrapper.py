@@ -7,7 +7,7 @@ class Auth0ApiWrapper:
     def __init__(self):
         self.settings = settings.AUTH0_PROD if settings.ENVIRIONMENT  == "production" else settings.AUTH0_DEV
         self.http = urllib3.PoolManager()
-        self.token = AuthToken.query.all()[0]
+        self.token = AuthToken.query.filter_by(env=settings.ENVIRIONMENT).first()
         self._validate_token()
 
     # Don't want to test following two fxns since we only get 1000 tokens a month
@@ -21,6 +21,7 @@ class Auth0ApiWrapper:
             self.token.token = token_obj["access_token"]
             self.token.expires_in = token_obj["expires_in"]
             self.token.granted_at = datetime.datetime.now().timestamp()
+            self.token.env = settings.ENVIRIONMENT
             db.session.commit()
 
     def _refresh_api_token(self):

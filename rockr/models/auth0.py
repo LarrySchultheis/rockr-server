@@ -8,8 +8,10 @@ class AuthToken(SerializerMixin, db.Model):
     token = db.Column(db.Text, nullable=False)
     expires_in = db.Column(db.Integer, nullable=False)
     granted_at = db.Column(db.Integer, nullable=False)
+    env = db.Column(db.Text, nullable=False)
 
     def __init__(self, token_obj):
         self.token = token_obj["access_token"]
         self.expires_in = token_obj["expires_in"]
         self.granted_at = token_obj["granted_at"]
+        self.env = token_obj["env"]
