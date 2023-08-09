@@ -25,7 +25,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       run: | 
-        echo ${{secrets.SETTINGS}} | base64 -d > rockr/settings.py
+        echo ${{secrets.DEV_SETTINGS}} | base64 -d > rockr/settings.py
         pytest -v --cov=rockr tests
   Deploy:
     needs: build
