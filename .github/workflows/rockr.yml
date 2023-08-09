@@ -48,6 +48,8 @@ jobs:
             sudo git fetch --all &&
             sudo git reset --hard origin/development &&
             sudo git pull origin development
+            # depz
+            pip3 install -r requirements.txt
             # seeeeeeecrettttttsss
             echo ${{secrets.SETTINGS}} | base64 -d > rockr/settings.py
             # restart da server
