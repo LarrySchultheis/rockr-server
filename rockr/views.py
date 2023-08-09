@@ -78,11 +78,10 @@ def load_user_from_request(request):
 def login():
     if "email" in request.args.keys():
         usr = load_user(request.args["email"])
-        success = login_user(usr)
-        if success:
+        # success = login_user(usr)
+        if usr:
             return format_response(200, usr.serialize())
-        else:
-            return "error", 401
+    return "error", 401
 
 
 @app.route('/logout', methods=['POST'])
@@ -237,19 +236,33 @@ def user_goals(user_id):
         return format_response(204, None)
 
 
-@app.route("/user_band", methods=["GET"])
-@app.route("/user_band/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
+@app.route("/user_bands", methods=["GET"])
+@app.route("/user_bands/<int:band_id>", methods=["GET", "PATCH", "POST", "DELETE"])
 # @login_required
-def user_band(band_id=None):
+def user_bands(band_id=None):
     # a band is a user with is_band=True
     if request.method == "GET":
         # check for invitations for a user account
         if not band_id:
-            user_id = request.args.get("user")
-            band_invites = UserBand.query.filter_by(user_id=user_id, seen=False)
-            return jsonify(serialize_query_result(band_invites))
+            if request.args.get("user"):
+                user_id = request.args.get("user")
+                band_invites = UserBand.query.filter_by(user_id=user_id, seen=False)
+                return jsonify(serialize_query_result(band_invites))
+        # get potential band members for band invite modal (may the coding gods forgive my sins)
+        elif request.args.get("filter"):
+            um = UserMatch.query.filter_by(user_id=band_id, accepted=True)  # all accepted matches
+            ub = UserBand.query.filter_by(band_id=band_id)  # existing and pending band members
+            ub_ids = [b.user_id for b in ub]
+
+            potential_bands = []
+            for match in um:
+                if match.match_id not in ub_ids:
+                    u = User.query.get(match.match_id)
+                    potential_bands.append(u)
+            return serialize_query_result(potential_bands)
+
         # get all band members for band account
-        ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True)
+        ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True, seen=True)
         bands_member_ids = [User.query.get(u.user_id) for u in ub]
         return format_response(200, serialize_query_result(bands_member_ids))
 
@@ -297,7 +310,7 @@ def check_match_profile(user_id):
         mp = MatchProfile.query.filter_by(user_id=user_id).first()
         if not mp:
             mp = MatchProfile(user_id=user_id)
-            db_manager.insert(MatchProfile(user_id=user_id))
+            db_manager.insert(mp)
         return {"is_match_profile_complete": mp.is_complete}
 
 
@@ -361,18 +374,22 @@ class GroupAPI(MethodView):
         self.model = model
 
     def get(self):
-        items = self.model.query.all()
+        sort_column = self.model.first_name if hasattr(self.model, "first_name") else self.model.id
+        items = self.model.query.order_by(sort_column.asc()).all()
         return jsonify([item.serialize() for item in items])
 
     def post(self):
-        item = self.model.deserialize(request.json)
-        db_manager.insert(item)
+        deserialized_payload = json.loads(request.data)
+        for key in deserialized_payload:
+            item_dict = deserialized_payload[key]
+            item = self.model(item_dict)
+            db_manager.insert(item)
 
-        if isinstance(item, User):
-            api_wrapper = auth0_wrapper.Auth0ApiWrapper()
-            api_wrapper.create_auth0_account(item)
+            if isinstance(item, User):
+                api_wrapper = auth0_wrapper.Auth0ApiWrapper()
+                api_wrapper.create_auth0_account(item)
 
-        return jsonify(item.serialize())
+        return format_response(201, None)
 
     def patch(self):
         resp = []
