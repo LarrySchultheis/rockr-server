@@ -91,7 +91,7 @@ def logout():
     return "success", 200
 
 
-@app.route("/reset_password", methods=["GET"])
+@app.route("/reset_password", methods=["POST"])
 @login_required
 def reset_password():
     if request.args.get("email"):

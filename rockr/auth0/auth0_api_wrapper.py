@@ -195,7 +195,6 @@ class Auth0ApiWrapper:
                     "connection": "Username-Password-Authentication"
                 })
             )
-            print(resp.status, resp.data)
             return {"status": resp.status, "data": "success"}
         except:
             print("An exception occurred")
