@@ -59,9 +59,12 @@ def index():
 def load_user(user_identifier):
     user = None
     if isinstance(user_identifier, str):
-        user = User.query.filter_by(email=user_identifier).first()
+        if user_identifier.isnumeric():
+            user = User.query.get(int(user_identifier))
+        else:
+            user = User.query.filter_by(email=user_identifier).first()
     elif isinstance(user_identifier, int):
-        user = User.query.filter_by(id=user_identifier).first()
+        user = User.query.get(user_identifier)
     return user
 
 
@@ -70,12 +73,12 @@ def login():
     if "email" in request.args.keys():
         email = request.args["email"]
         user = load_user(email)
-        if not user:
-            new_user = User(email=email)
-            db_manager.insert(new_user)
-            match_profile = MatchProfile(user_id=new_user.id)
-            db_manager.insert(match_profile)
-            user = new_user
+        # if not user:
+        #     new_user = User(email=email)
+        #     db_manager.insert(new_user)
+        #     match_profile = MatchProfile(user_id=new_user.id)
+        #     db_manager.insert(match_profile)
+        #     user = new_user
         if login_user(user):
             return format_response(200, user.serialize())
     return "Not authorized", 401
