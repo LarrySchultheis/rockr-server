@@ -55,7 +55,7 @@ class UserGoal(SerializerMixin, db.Model):
 
 class MatchProfile(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
     bio = db.Column(db.Text, nullable=True)
 
     @property

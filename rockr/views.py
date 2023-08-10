@@ -383,14 +383,14 @@ class GroupAPI(MethodView):
         deserialized_payload = json.loads(request.data)
         for key in deserialized_payload:
             item_dict = deserialized_payload[key]
-            item = self.model(item_dict)
+            item = self.model(**item_dict)
             db_manager.insert(item)
 
             if isinstance(item, User):
                 match_profile = MatchProfile(user_id=item.id)
                 db_manager.insert(match_profile)
                 api_wrapper = auth0_wrapper.Auth0ApiWrapper()
-                api_wrapper.create_auth0_account(item)
+                api_wrapper.create_auth0_account(item_dict)
 
         return format_response(201, None)
 
