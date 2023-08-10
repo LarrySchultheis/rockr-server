@@ -164,6 +164,7 @@ class Auth0ApiWrapper:
         except:
             print("An exception occurred")
 
+    # Keep just cause :)
     def change_password(self, user):
         try:
             user_id = self.get_users_by_email(user["email"])[0]["user_id"]
@@ -177,5 +178,23 @@ class Auth0ApiWrapper:
                 body=json.dumps({"password": user["password"]}),
             )
             return {"status": resp.status, "data": json.loads(resp.data)}
+        except:
+            print("An exception occurred")
+
+    def reset_password(self, email):
+        try:
+            resp = self.http.request(
+                "POST",
+                f"{self.settings['password_reset_url']}",
+                headers={
+                    "Content-type": "application/json"
+                },
+                body=json.dumps({
+                    "client_id": self.settings["client_id"],
+                    "email": email,
+                    "connection": "Username-Password-Authentication"
+                })
+            )
+            return {"status": resp.status, "data": "success"}
         except:
             print("An exception occurred")

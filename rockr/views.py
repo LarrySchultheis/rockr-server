@@ -91,11 +91,14 @@ def logout():
     return "success", 200
 
 
-@app.route("/change_password", methods=["POST"])
+@app.route("/reset_password", methods=["POST"])
 @login_required
-def change_password():
-    resp = uq.change_password(request.json)
-    return format_response(resp["status"], resp["data"])
+def reset_password():
+    if request.args.get("email"):
+        api_wrapper = auth0_wrapper.Auth0ApiWrapper()
+        resp = api_wrapper.reset_password(request.args.get("email"))
+        return format_response(resp["status"], resp["data"])
+    return format_response(400, "Bad request")
 
 
 @app.route("/get_user_role", methods=["GET"])
