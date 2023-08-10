@@ -1,6 +1,7 @@
 import json, urllib3, datetime
 from rockr.models.auth0 import AuthToken
 from rockr import settings, db
+from password_generator import PasswordGenerator
 
 
 class Auth0ApiWrapper:
@@ -8,7 +9,15 @@ class Auth0ApiWrapper:
         self.settings = settings.AUTH0_PROD if settings.ENVIRIONMENT  == "production" else settings.AUTH0_DEV
         self.http = urllib3.PoolManager()
         self.token = AuthToken.query.filter_by(env=settings.ENVIRIONMENT).first()
+        self.pw_gen = self._init_pw_gen()
         self._validate_token()
+
+    def _init_pw_gen(self):
+        pw_gen = PasswordGenerator()
+        pw_gen.minlen = 10
+        pw_gen.minuchars = 1
+        pw_gen.minnumbers = 1
+        pw_gen.minschars = 1
 
     # Don't want to test following two fxns since we only get 1000 tokens a month
     # RIP code coverage
@@ -62,7 +71,7 @@ class Auth0ApiWrapper:
                         "email": user["email"],
                         "name": f"{user['first_name']} {user['last_name']}",
                         "verify_email": False,
-                        "password": user["password"],
+                        "password": self.pw_gen.generate(),
                         "connection": "Username-Password-Authentication",
                     }
                 ),
