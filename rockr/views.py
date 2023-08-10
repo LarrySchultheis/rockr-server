@@ -33,21 +33,11 @@ def serialize_query_result(result):
     return jsonify(list_result).json
 
 
-def serialize_tuple_list(result, keys):
-    return_lst = []
-    for r in result:
-        obj = {}
-        for i, t in enumerate(r):
-            obj[keys[i]] = t.serialize()
-        return_lst.append(obj)
-    return jsonify(return_lst).json
-
-
-# for PATCHing GroupAPI
-def update_group(model_inst, **kwargs):
-    for k, v in kwargs.items():
-        if hasattr(model_inst, k):
-            setattr(model_inst, k, v)
+def get_all_user_match_objects(user_id):
+    matches = UserMatch.query.filter(
+        (UserMatch.user_id == user_id) | (UserMatch.match_id == user_id), UserMatch.accepted == True
+    ).all()
+    return matches
 
 
 @app.route("/", methods=["GET"])
@@ -121,19 +111,19 @@ def get_roles():
 @login_required
 def get_matches():
     user = User.query.filter_by(email=request.args.get("email")).first()
-    matches = (
-        db.session.query(User, UserMatch)
-        .join(User, User.id == UserMatch.user_id)
-        .filter(UserMatch.match_id == user.id)
-        .all()
-    )
-    return format_response(200, serialize_tuple_list(matches, ["user", "match"]))
+    matches = get_all_user_match_objects(user.id)
+    match_users = []
+    for match in matches:
+        match_users.append(
+            User.query.get(match.user_id) if match.user_id != user.id else User.query.get(match.match_id)
+        )
+    return format_response(200, serialize_query_result(match_users))
 
 
 @app.route("/messages", methods=["GET"])
 @login_required
 def get_messages():
-    messages = Message.query.all()
+    messages = Message.query.order_by(Message.ts.desc()).all()
     return format_response(200, serialize_query_result(messages))
 
 
@@ -253,16 +243,16 @@ def user_bands(band_id=None):
                 return jsonify(serialize_query_result(band_invites))
         # get potential band members for band invite modal (may the coding gods forgive my sins)
         elif request.args.get("filter"):
-            um = UserMatch.query.filter_by(user_id=band_id, accepted=True)  # all accepted matches
+            um = get_all_user_match_objects(band_id)
             ub = UserBand.query.filter_by(band_id=band_id)  # existing and pending band members
             ub_ids = [b.user_id for b in ub]
 
-            potential_bands = []
+            potential_band_members = []
             for match in um:
-                if match.match_id not in ub_ids:
-                    u = User.query.get(match.match_id)
-                    potential_bands.append(u)
-            return serialize_query_result(potential_bands)
+                if match.match_id not in ub_ids and match.user_id not in ub_ids:
+                    u = User.query.get(match.match_id) if band_id != match.match_id else User.query.get(match.user_id)
+                    potential_band_members.append(u)
+            return serialize_query_result(potential_band_members)
 
         # get all band members for band account
         ub = UserBand.query.filter_by(band_id=band_id, is_accepted=True, seen=True)
