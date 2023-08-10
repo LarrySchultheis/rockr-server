@@ -13,7 +13,7 @@ from rockr.models import (
     Message,
 )
 import rockr.auth0.auth0_api_wrapper as auth0
-import pytest
+import pytest, json
 
 # The Child Man
 TEST_USER_ID = 202
@@ -125,7 +125,15 @@ class MyTest(TestCase):
 
     @pytest.mark.order(1)
     def test_create_user(self):
-        db_manager.insert(User(MOCK_USER))
+        db_manager.insert(User(
+            email=MOCK_USER["email"],
+            first_name=MOCK_USER["first_name"],
+            last_name=MOCK_USER["last_name"],
+            username=MOCK_USER["username"],
+            is_admin=MOCK_USER["is_admin"],
+            is_paused=MOCK_USER["is_paused"],
+            is_band=MOCK_USER["is_band"]
+        ))
         user = User.query.filter_by(email=MOCK_USER["email"]).first()
         assert user.email == MOCK_USER["email"]
         assert user.first_name == MOCK_USER["first_name"]
