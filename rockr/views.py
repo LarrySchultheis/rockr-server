@@ -8,6 +8,7 @@ from rockr.utils import message_handler as mh
 import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0_wrapper
 from flask_socketio import emit
+from rockr.analytics.match_algorithm import match_algorithm
 from rockr.models import (
     Goal,
     Instrument,
@@ -73,12 +74,12 @@ def login():
     if "email" in request.args.keys():
         email = request.args["email"]
         user = load_user(email)
-        # if not user:
-        #     new_user = User(email=email)
-        #     db_manager.insert(new_user)
-        #     match_profile = MatchProfile(user_id=new_user.id)
-        #     db_manager.insert(match_profile)
-        #     user = new_user
+        if not user:
+            new_user = User(email=email)
+            db_manager.insert(new_user)
+            match_profile = MatchProfile(user_id=new_user.id)
+            db_manager.insert(match_profile)
+            user = new_user
         if login_user(user):
             return format_response(200, user.serialize())
     return "Not authorized", 401
@@ -291,8 +292,8 @@ def user_bands(band_id=None):
 @login_required
 def user_matches(user_id):
     if request.method == "GET":
-        matches = UserMatch.query.filter_by(user_id=user_id, seen=False)
-        match_users = [User.query.get(m.match_id) for m in matches]
+        matches = match_algorithm(user_id)
+        match_users = [User.query.get(m[0].match_id) for m in matches]
         return serialize_query_result(match_users)
 
     elif request.method == "PATCH":
