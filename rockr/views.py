@@ -8,6 +8,7 @@ from rockr.utils import message_handler as mh
 import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0_wrapper
 from flask_socketio import emit
+from rockr.analytics.match_algorithm import match_algorithm
 from rockr.models import (
     Goal,
     Instrument,
@@ -59,9 +60,12 @@ def index():
 def load_user(user_identifier):
     user = None
     if isinstance(user_identifier, str):
-        user = User.query.filter_by(email=user_identifier).first()
+        if user_identifier.isnumeric():
+            user = User.query.get(int(user_identifier))
+        else:
+            user = User.query.filter_by(email=user_identifier).first()
     elif isinstance(user_identifier, int):
-        user = User.query.filter_by(id=user_identifier).first()
+        user = User.query.get(user_identifier)
     return user
 
 
@@ -288,8 +292,8 @@ def user_bands(band_id=None):
 @login_required
 def user_matches(user_id):
     if request.method == "GET":
-        matches = UserMatch.query.filter_by(user_id=user_id, seen=False)
-        match_users = [User.query.get(m.match_id) for m in matches]
+        matches = match_algorithm(user_id)
+        match_users = [User.query.get(m[0].match_id) for m in matches]
         return serialize_query_result(match_users)
 
     elif request.method == "PATCH":
