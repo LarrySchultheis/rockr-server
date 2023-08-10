@@ -253,14 +253,17 @@ def user_bands(band_id=None):
                 return jsonify(serialize_query_result(band_invites))
         # get potential band members for band invite modal (may the coding gods forgive my sins)
         elif request.args.get("filter"):
-            um = UserMatch.query.filter_by(user_id=band_id, accepted=True)  # all accepted matches
+            um = UserMatch.query.filter(
+                UserMatch.user_id == band_id or UserMatch.match_id == band_id,
+                UserMatch.accepted == True
+            ).all()  # all accepted matches
             ub = UserBand.query.filter_by(band_id=band_id)  # existing and pending band members
             ub_ids = [b.user_id for b in ub]
 
             potential_bands = []
             for match in um:
-                if match.match_id not in ub_ids:
-                    u = User.query.get(match.match_id)
+                if match.match_id not in ub_ids and match.user_id not in ub_ids:
+                    u = User.query.get(match.match_id) if band_id != match.match_id else User.query.get(match.user_id)
                     potential_bands.append(u)
             return serialize_query_result(potential_bands)
 
