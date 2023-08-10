@@ -123,7 +123,7 @@ def get_matches():
 @app.route("/messages", methods=["GET"])
 @login_required
 def get_messages():
-    messages = Message.query.order_by(Message.ts.desc()).all()
+    messages = Message.query.order_by(Message.ts.asc()).all()
     return format_response(200, serialize_query_result(messages))
 
 
