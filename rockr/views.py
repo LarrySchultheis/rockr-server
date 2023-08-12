@@ -114,11 +114,10 @@ def get_matches():
     matches = get_all_user_match_objects(user.id)
     match_users = []
     for match in matches:
-        match_users.append(
-            User.query.get(match.user_id) if match.user_id != user.id else User.query.get(match.match_id)
-        )
+        user = User.query.get(match.user_id) if match.user_id != user.id else User.query.get(match.match_id)
+        if user not in match_users:
+            match_users.append(user)   
     return format_response(200, serialize_query_result(match_users))
-
 
 @app.route("/messages", methods=["GET"])
 @login_required
