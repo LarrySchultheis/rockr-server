@@ -87,4 +87,4 @@ def match_algorithm(user_id):
         db_manager.insert(new_match)
         matches.append((new_match, match_score))
 
-    return sorted(matches, key=lambda m: m[1], reverse=True)
+    return sorted(matches, key=lambda m: m[1])
