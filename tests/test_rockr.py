@@ -1,5 +1,5 @@
 from flask_testing import TestCase
-from rockr import create_app, db, settings, db_manager
+from rockr import create_app, db, settings, db_manager, views
 from rockr.models import (
     User,
     MusicalInterest,
@@ -14,6 +14,7 @@ from rockr.models import (
     Message,
 )
 import rockr.auth0.auth0_api_wrapper as auth0
+import rockr.analytics.match_algorithm as ma
 import pytest
 
 # The Child Man
@@ -112,16 +113,23 @@ class MyTest(TestCase):
         db.session.commit()
 
     def test_get_user_role(self):
-        api_wrapper = auth0.Auth0ApiWrapper()
-        role = api_wrapper.get_user_role(TEST_USER_AUTH0_ID)[0]
+        role = self.api_wrapper.get_user_role(TEST_USER_AUTH0_ID)[0]
         assert role["name"] == "Basic User"
         assert role["description"] == "Basic User"
 
     def test_admin_get_user_role(self):
-        api_wrapper = auth0.Auth0ApiWrapper()
-        role = api_wrapper.get_user_role(ADMIN_USER_AUTH0_ID)[0]
+        role = self.api_wrapper.get_user_role(ADMIN_USER_AUTH0_ID)[0]
         assert role["name"] == "Admin"
         assert role["description"] == "Admin"
+
+    def test_get_roles(self):
+        roles = self.api_wrapper.get_roles()
+        assert len(roles["data"]) == 3
+        assert roles["status"] == 200
+        role_names = [r["name"] for r in roles["data"]]
+        assert "Admin" in role_names
+        assert "Band" in role_names
+        assert "Basic User" in role_names
 
     @pytest.mark.order(1)
     def test_create_user(self):
@@ -135,6 +143,9 @@ class MyTest(TestCase):
         assert user.is_paused == MOCK_USER["is_paused"]
         assert user.is_band == MOCK_USER["is_band"]
         assert User.query.filter_by(email=MOCK_USER["email"]).count() == 1
+        res = self.api_wrapper.create_auth0_account(MOCK_USER)
+        assert res["status"] == 201
+
 
     @pytest.mark.order(2)
     def test_get_user(self):
@@ -150,10 +161,24 @@ class MyTest(TestCase):
         assert not usr.is_band
 
     @pytest.mark.order(3)
+    def test_get_user_by_email(self):
+        res = self.api_wrapper.get_users_by_email(MOCK_USER["email"])[0]
+        assert(res["email"] == MOCK_USER["email"])
+        assert(res["name"]) == f'{MOCK_USER["first_name"]} {MOCK_USER["last_name"]}'
+
+    @pytest.mark.order(4)
+    def test_reset_password(self):
+        res = self.api_wrapper.reset_password(MOCK_USER["email"])
+        assert res["status"] == 200
+        assert res["data"] == "success"
+
+    @pytest.mark.order(5)
     def test_delete_user(self):
         usr = User.query.filter_by(email=MOCK_USER["email"]).first()
         db_manager.delete(usr)
         assert User.query.filter_by(email=MOCK_USER["email"]).count() == 0
+        res = self.api_wrapper.delete_auth0_account(MOCK_USER["email"]);
+        assert res == 204
 
     def test_musical_interests(self):
         mi_cnt = MusicalInterest.query.count()
@@ -355,8 +380,31 @@ class MyTest(TestCase):
         assert User.query.filter_by(is_band=True).count() > 0
         band_user = User.query.filter_by(is_band=True).first()
         assert isinstance(band_user, User)
-        assert UserBand.query.filter_by(band_id=band_user.id).count() == 1
+        assert UserBand.query.filter_by(band_id=band_user.id).count() > 1
         band = UserBand.query.filter_by(band_id=band_user.id).first()
         assert isinstance(band, UserBand);
 
+    def test_get_all_user_matches(self):
+        matches = views.get_all_user_match_objects(1)
+        for m in matches:
+            assert m.accepted
 
+    def test_format_response(self):
+        res = views.format_response(200, "Test")
+        assert "status" in res.keys()
+        assert "data" in res.keys()
+        assert res["status"] == 200
+        assert res["data"] == "Test"      
+
+    def test_messages(self):
+        msg_ct = Message.query.count()
+        messages = Message.query.order_by(Message.ts.asc()).all()
+        assert len(messages) == msg_ct
+        for m in messages:
+            assert isinstance(m, Message)
+
+    def test_match_algorithm(self):
+        res = ma.match_algorithm(ADMIN_TEST_USER_ID)
+        for r in res:
+            assert isinstance(r[0], UserMatch)
+            assert isinstance(r[1], float)

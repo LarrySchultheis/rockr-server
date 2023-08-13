@@ -1,11 +1,10 @@
 import json
+from datetime import datetime
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_login import login_required, login_user, logout_user
 
 from rockr import app, db_manager, db, socketio, login_manager
-from rockr.utils import message_handler as mh
-import rockr.queries.user_queries as uq
 import rockr.auth0.auth0_api_wrapper as auth0_wrapper
 from flask_socketio import emit
 from rockr.analytics.match_algorithm import match_algorithm
@@ -103,7 +102,8 @@ def get_user_role():
 @app.route("/get_roles", methods=["GET"])
 @login_required
 def get_roles():
-    resp = uq.get_roles()
+    api_wrapper = auth0_wrapper.Auth0ApiWrapper()
+    resp = api_wrapper.get_roles()
     return format_response(resp["status"], resp["data"])
 
 
@@ -134,7 +134,20 @@ def test_connect():
 
 @socketio.on("message")
 def handle_message(message):
-    mh.save_message(message)
+    sender_id = User.query.filter_by(email=message["sender"]["email"]).first().id
+    recipient_id = message["recipient"]["id"]
+    message_body = message["text"]
+    db.session.add(
+        Message(
+            {
+                "sender_id": sender_id,
+                "recipient_id": recipient_id,
+                "message": message_body,
+                "ts": datetime.now(),
+            }
+        )
+    )
+    db.session.commit()
     emit(
         "messageResponse",
         {
