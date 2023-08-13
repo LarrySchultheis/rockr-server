@@ -1,17 +1,17 @@
 # rockr-server
-## Installing Flask:
+## Installing Dependencies:
 ### Windows:
 ```py -3 -m venv .venv```
 ```.venv\Scripts\activate```
-```pip install Flask```
+```pip install -r requirments.txt```
 
 ### Mac/Linux:
 ```python3 -m venv .venv```
 ```. .venv/bin/activate```
-```pip install Flask```
+```pip install -r requirments.txt```
 
 ### To run debug mode:
-```flask --app rockr run --debug```
+```flask --app rockr run --debug --cert=adhoc```
 
 ### Running unit tests
 ```pytest -v --cov=rockr```
