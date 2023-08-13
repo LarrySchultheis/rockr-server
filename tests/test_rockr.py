@@ -413,3 +413,4 @@ class MyTest(TestCase):
         for r in res:
             assert isinstance(r[0], UserMatch)
             assert isinstance(r[1], float)
+            assert r[1] >= 0 and r[1] <= 1
