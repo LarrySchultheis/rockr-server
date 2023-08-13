@@ -1,4 +1,4 @@
-import json, urllib3, datetime
+import json, urllib3, datetime, traceback
 from rockr.models.auth0 import AuthToken
 from rockr import settings, db
 from password_generator import PasswordGenerator
@@ -18,6 +18,7 @@ class Auth0ApiWrapper:
         pw_gen.minuchars = 1
         pw_gen.minnumbers = 1
         pw_gen.minschars = 1
+        return pw_gen
 
     # Don't want to test following two fxns since we only get 1000 tokens a month
     # RIP code coverage
@@ -86,6 +87,7 @@ class Auth0ApiWrapper:
                 self._assign_band(auth0_user, roles)
             return {"status": resp.status, "data": resp.data}
         except:
+            print(traceback.format_exc())
             print("An exception occurred")
 
     def _assign_admin(self, user, roles):
@@ -161,23 +163,6 @@ class Auth0ApiWrapper:
                 headers={"Authorization": f"Bearer {self.token.token}"},
             )
             return json.loads(resp.data)
-        except:
-            print("An exception occurred")
-
-    # Keep just cause :)
-    def change_password(self, user):
-        try:
-            user_id = self.get_users_by_email(user["email"])[0]["user_id"]
-            resp = self.http.request(
-                "PATCH",
-                f"{self.settings['auth0_url']}users/{user_id}",
-                headers={
-                    "Authorization": f"Bearer {self.token.token}",
-                    "Content-type": "application/json",
-                },
-                body=json.dumps({"password": user["password"]}),
-            )
-            return {"status": resp.status, "data": json.loads(resp.data)}
         except:
             print("An exception occurred")
 
