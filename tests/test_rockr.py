@@ -1,5 +1,5 @@
 from flask_testing import TestCase
-from rockr import create_app, db, settings, db_manager
+from rockr import create_app, db, settings, db_manager, views
 from rockr.models import (
     User,
     MusicalInterest,
@@ -11,8 +11,10 @@ from rockr.models import (
     MatchProfile,
     UserMatch,
     Message,
+    UserBand
 )
 import rockr.auth0.auth0_api_wrapper as auth0
+import rockr.analytics.match_algorithm as ma
 import pytest
 
 # The Child Man
@@ -327,3 +329,62 @@ class MyTest(TestCase):
         usr_match.accepted = False
         db.session.commit()
         assert not usr_match.accepted
+
+    def test_user_bands(self):
+        assert UserBand.query.count() > 0
+        
+        b = UserBand.query.first()
+        assert isinstance(b.id, int)
+        assert isinstance(b.user_id, int)
+        assert isinstance(b.band_id, int)
+        assert isinstance(b.is_accepted, bool)
+        assert isinstance(b.seen, bool)
+
+    def test_band_users(self): 
+        ub = UserBand.query.first()
+        user = User.query.get(ub.user_id)
+        assert isinstance(user, User)  
+    
+    def test_band_invites(self):
+        assert UserBand.query.filter_by(seen=False).count() > 0
+        band_invite = UserBand.query.filter_by(seen=False).first()
+        user = User.query.get(band_invite.user_id)
+        assert isinstance(user, User)
+        assert band_invite.seen == False
+
+    def test_bands(self):
+        assert User.query.filter_by(is_band=True).count() > 0
+        band_user = User.query.filter_by(is_band=True).first()
+        assert isinstance(band_user, User)
+        assert UserBand.query.filter_by(band_id=band_user.id).count() > 1
+        band = UserBand.query.filter_by(band_id=band_user.id).first()
+        assert isinstance(band, UserBand);
+
+    def test_get_all_user_matches(self):
+        matches = views.get_all_user_match_objects(1)
+        for m in matches:
+            assert isinstance(m, UserMatch)
+            assert (m.user_id == 1) | (m.match_id == 1)
+            assert m.accepted
+
+    def test_format_response(self):
+        res = views.format_response(200, "Test")
+        assert "status" in res.keys()
+        assert "data" in res.keys()
+        assert res["status"] == 200
+        assert res["data"] == "Test"      
+
+    def test_messages(self):
+        msg_ct = Message.query.count()
+        messages = Message.query.order_by(Message.ts.asc()).all()
+        assert len(messages) == msg_ct
+        for i, m in enumerate(messages):
+            assert isinstance(m, Message)
+            if i > 0:
+                assert m.ts >= messages[i].ts
+
+    def test_match_algorithm(self):
+        res = ma.match_algorithm(ADMIN_TEST_USER_ID)
+        for r in res:
+            assert isinstance(r[0], UserMatch)
+            assert isinstance(r[1], float)
