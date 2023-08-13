@@ -13,6 +13,9 @@
 ### To run debug mode:
 ```flask --app rockr run --debug```
 
+### Running unit tests
+```pytest -v --cov=rockr```
+
 ### Git Workflow
 Branch off of development and merge into development. Team will merge development into main at the end of each sprint (at a minimum).
 ### Making Contributions (just one way to skin the cat)
@@ -30,5 +33,5 @@ Anytime you make a change to a model, you need to create a migration to persist 
 2. inside your venv run `export FLASK_APP=rockr.py` (you only need to do this the first time)
 3. run `flask db migrate`
 4. run `flask db upgrade`
- 
+
 Bonus reading for the curious: https://flask-migrate.readthedocs.io/en/latest/
