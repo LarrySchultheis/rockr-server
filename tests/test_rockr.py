@@ -10,6 +10,7 @@ from rockr.models import (
     UserGoal,
     MatchProfile,
     UserMatch,
+    UserBand,
     Message,
     UserBand
 )
@@ -113,16 +114,23 @@ class MyTest(TestCase):
         db.session.commit()
 
     def test_get_user_role(self):
-        api_wrapper = auth0.Auth0ApiWrapper()
-        role = api_wrapper.get_user_role(TEST_USER_AUTH0_ID)[0]
+        role = self.api_wrapper.get_user_role(TEST_USER_AUTH0_ID)[0]
         assert role["name"] == "Basic User"
         assert role["description"] == "Basic User"
 
     def test_admin_get_user_role(self):
-        api_wrapper = auth0.Auth0ApiWrapper()
-        role = api_wrapper.get_user_role(ADMIN_USER_AUTH0_ID)[0]
+        role = self.api_wrapper.get_user_role(ADMIN_USER_AUTH0_ID)[0]
         assert role["name"] == "Admin"
         assert role["description"] == "Admin"
+
+    def test_get_roles(self):
+        roles = self.api_wrapper.get_roles()
+        assert len(roles["data"]) == 3
+        assert roles["status"] == 200
+        role_names = [r["name"] for r in roles["data"]]
+        assert "Admin" in role_names
+        assert "Band" in role_names
+        assert "Basic User" in role_names
 
     @pytest.mark.order(1)
     def test_create_user(self):
@@ -136,6 +144,9 @@ class MyTest(TestCase):
         assert user.is_paused == MOCK_USER["is_paused"]
         assert user.is_band == MOCK_USER["is_band"]
         assert User.query.filter_by(email=MOCK_USER["email"]).count() == 1
+        res = self.api_wrapper.create_auth0_account(MOCK_USER)
+        assert res["status"] == 201
+
 
     @pytest.mark.order(2)
     def test_get_user(self):
@@ -151,10 +162,24 @@ class MyTest(TestCase):
         assert not usr.is_band
 
     @pytest.mark.order(3)
+    def test_get_user_by_email(self):
+        res = self.api_wrapper.get_users_by_email(MOCK_USER["email"])[0]
+        assert(res["email"] == MOCK_USER["email"])
+        assert(res["name"]) == f'{MOCK_USER["first_name"]} {MOCK_USER["last_name"]}'
+
+    @pytest.mark.order(4)
+    def test_reset_password(self):
+        res = self.api_wrapper.reset_password(MOCK_USER["email"])
+        assert res["status"] == 200
+        assert res["data"] == "success"
+
+    @pytest.mark.order(5)
     def test_delete_user(self):
         usr = User.query.filter_by(email=MOCK_USER["email"]).first()
         db_manager.delete(usr)
         assert User.query.filter_by(email=MOCK_USER["email"]).count() == 0
+        res = self.api_wrapper.delete_auth0_account(MOCK_USER["email"]);
+        assert res == 204
 
     def test_musical_interests(self):
         mi_cnt = MusicalInterest.query.count()
