@@ -1,115 +1,90 @@
+from rockr import db_manager
 from rockr.models import (
     User,
     UserInstrument,
     UserMusicalInterest,
     UserGoal,
+    UserMatch,
 )
 
+INSTRUMENT_MULTIPLIER = 0.4
+INTEREST_MULTIPLIER = 0.3
+GOAL_MULTIPLIER = 0.3
 
-# input should be an array of instrument ids, array of music interest ids, and array of goal ids,
-# most likely inputted through what the logged in user has, but also individually to test it on its own
-def match_algorithm(instrumentids, musicinterestids, goalids):
-    # List to store the matched tuples
-    matches_tuple_list = []
 
-    # numbers for the match score percentage, for us to edit these more easily.
-    instrument_multiplier = 0.4
-    music_interest_multiplier = 0.3
-    goals_multiplier = 0.3
+def match_algorithm(user_id):
+    matches = []
+    # delete all unseen matches for this user
+    um = UserMatch.query.filter_by(user_id=user_id, seen=False)
+    for m in um:
+        db_manager.delete(m)
 
-    # Get all the users for the Algorithm to sort through, that are not admins, are active, and are not bands
-    match_users = User.query.filter_by(
-        is_admin=False, is_paused=False, is_band=False
+    user_instrument_ids = {
+        i.instrument_id for i in UserInstrument.query.filter_by(user_id=user_id).all()
+    }
+    user_interest_ids = {
+        i.interest_id
+        for i in UserMusicalInterest.query.filter_by(user_id=user_id).all()
+    }
+    user_goal_ids = {g.goal_id for g in UserGoal.query.filter_by(user_id=user_id).all()}
+
+    # user must have a complete match profile
+    if (
+        len(user_instrument_ids) < 1
+        or len(user_interest_ids) < 1
+        or len(user_goal_ids) < 1
+    ):
+        return []
+
+    potential_match_users = User.query.filter(
+        User.is_paused == False, User.id != user_id
     ).all()
-    # Loop through the returned users
-    for matched_user in match_users:
-        # Find the ID of each one to look through the User Tables
-        match_user_id = matched_user.id
 
-        # variables for the match score totals For each User
-        instrument_score = 0.0
-        music_interest_score = 0.0
-        goals_score = 0.0
-        match_score = 0.0
+    for user in potential_match_users:
+        existing_match = UserMatch.query.filter_by(user_id=user_id, match_id=user.id).first()
+        if existing_match:
+            continue
 
-        # numbers for the number of matches found.
-        instrument_match_count = 0.0
-        music_interest_match_count = 0.0
-        goals_match_count = 0.0
+        match_user_instrument_ids = {
+            i.instrument_id
+            for i in UserInstrument.query.filter_by(user_id=user.id)
+        }
+        match_user_interests_ids = {
+            i.interest_id
+            for i in UserMusicalInterest.query.filter_by(user_id=user.id)
+        }
+        match_user_goal_ids = {
+            i.goal_id for i in UserGoal.query.filter_by(user_id=user.id).all()
+        }
 
-        # In case the instrument IDs inputted array is empty, default score to 0.0
-        if len(instrumentids) == 0:
-            instrument_score = 0.0
-            instrument_match_count = 0.0
-        else:
-            # Loop through the Instrument IDs inputted, query to see if one with the matched user's ID and Instrument ID shows up
-            # Increment for each one found, then divide the total matched by the length and multiply by the multiplier
-            # just get the first one to make there less to loop through, reducing time.
-            for instrumentid in instrumentids:
-                match_instruments = UserInstrument.query.filter_by(
-                    id=match_user_id, instrument_id=instrumentid
-                ).first()
-                if match_instruments is None:
-                    instrument_match_count = instrument_match_count + 0.0
-                else:
-                    instrument_match_count = instrument_match_count + 1.0
-            # Get the percentage total
-            instrument_score = instrument_match_count / len(instrumentids)
-            instrument_score = instrument_score * instrument_multiplier
+        if (
+                len(match_user_instrument_ids) < 1
+                or len(match_user_interests_ids) < 1
+                or len(match_user_goal_ids) < 1
+        ):
+            continue
 
-        # In case the Music Interest IDs inputted array is empty, default score to 0.0
-        if len(musicinterestids) == 0:
-            music_interest_score = 0.0
-            music_interest_match_count = 0.0
-        else:
-            # Loop through the Music Interest IDs inputted, query to see if one with the matched user's ID and Music Interest ID shows up
-            # Increment for each one found, then divide the total matched by the length and multiply by the multiplier
-            # just get the first one to make there less to loop through, reducing time.
-            for musicinterestid in musicinterestids:
-                match_music_interest = UserMusicalInterest.query.filter_by(
-                    id=match_user_id, interest_id=musicinterestid
-                ).first()
-                if match_music_interest is None:
-                    music_interest_match_count = music_interest_match_count + 0.0
-                else:
-                    music_interest_match_count = music_interest_match_count + 1.0
-            # Get the percentage total
-            music_interest_score = music_interest_match_count / len(musicinterestids)
-            music_interest_score = music_interest_score * music_interest_multiplier
-
-        # In case the goal IDs inputted array is empty, default score to 0.0
-        if len(goalids) == 0:
-            goals_score = 0.0
-            goals_match_count = 0.0
-        else:
-            # Loop through the Goal IDs inputted, query to see if one with the matched user's ID and goal ID shows up
-            # Increment for each one found, then divide the total matched by the length and multiply by the multiplier
-            # just get the first one to make there less to loop through, reducing time.
-            for goalid in goalids:
-                match_goal = UserGoal.query.filter_by(
-                    id=match_user_id, goal_id=goalid
-                ).first()
-                if match_goal is None:
-                    goals_match_count = goals_match_count + 0.0
-                else:
-                    goals_match_count = goals_match_count + 1.0
-            # Get the percentage total
-            goals_score = goals_match_count / len(goalids)
-            goals_score = goals_score * goals_multiplier
-
-        # total them up after getting the individual scores
-        match_score = instrument_score + music_interest_score + goals_score
-        # create tuple of the user information to be returned, making the match score first so it can be sorted easily
-        match_tuple = (
-            match_score,
-            matched_user.id,
-            matched_user.username,
-            matched_user.first_name,
-            matched_user.last_name,
+        # get counts
+        common_instrument_match_count = len(
+            user_instrument_ids & match_user_instrument_ids
         )
-        # append to the list
-        matches_tuple_list.append(match_tuple)
+        common_interest_match_count = len(user_interest_ids & match_user_interests_ids)
+        common_goals_match_count = len(user_goal_ids & match_user_goal_ids)
 
-    # after matches are found, sort by match_score. Since match_score is the first tuple element, makes sorting easier
-    matches_tuple_list.sort(reverse=True)
-    return matches_tuple_list
+        # calculate scores
+        instrument_score = (
+            common_instrument_match_count * 1.0 / len(match_user_instrument_ids)
+        ) * INSTRUMENT_MULTIPLIER
+        interest_score = (
+            common_interest_match_count * 1.0 / len(match_user_interests_ids)
+        ) * INTEREST_MULTIPLIER
+        goal_score = (
+            common_goals_match_count * 1.0 / len(match_user_goal_ids)
+        ) * GOAL_MULTIPLIER
+
+        match_score = 1 - (instrument_score + interest_score + goal_score) / 100
+        new_match = UserMatch(user_id=user_id, match_id=user.id)
+        db_manager.insert(new_match)
+        matches.append((new_match, match_score))
+
+    return sorted(matches, key=lambda m: m[1])

@@ -13,20 +13,6 @@ class User(SerializerMixin, UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     is_paused = db.Column(db.Boolean, default=False, nullable=False)
     is_band = db.Column(db.Boolean, default=False, nullable=False)
-    is_authenticated = db.Column(db.Boolean, default=False, nullable=False)
     is_active = db.Column(
-        db.Boolean, default=False, nullable=False
+        db.Boolean, default=True, nullable=False
     )  # tied to flask login
-    is_anonymous = db.Column(db.Boolean, default=False, nullable=False)
-
-    def __init__(self, user):
-        self.username = user["username"]
-        self.first_name = user["first_name"]
-        self.last_name = user["last_name"]
-        self.email = user["email"]
-        self.is_admin = user["is_admin"]
-        self.is_paused = user["is_paused"]
-        self.is_band = user["is_band"]
-
-    def get_id(self):
-        return self.id

@@ -29,7 +29,6 @@ MOCK_USER = {
     "last_name": "ME",
     "email": "testmebby@yahoooooo.com",
     "username": ":)))))",
-    "password": "superW3akP@ssword",
     "is_admin": False,
     "is_paused": False,
     "is_band": False,
@@ -126,7 +125,7 @@ class MyTest(TestCase):
 
     @pytest.mark.order(1)
     def test_create_user(self):
-        db_manager.insert(User(MOCK_USER))
+        db_manager.insert(User(**MOCK_USER))
         user = User.query.filter_by(email=MOCK_USER["email"]).first()
         assert user.email == MOCK_USER["email"]
         assert user.first_name == MOCK_USER["first_name"]

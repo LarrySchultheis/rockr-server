@@ -17,7 +17,7 @@ site_url = settings.PROD_SITE if settings.ENVIRIONMENT == "production" else sett
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    CORS(app, origins=[site_url])
+    CORS(app, origins=[site_url], supports_credentials=True)
 
     # configure the database
     if test_config is not None:
@@ -40,6 +40,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 app.secret_key = settings.FLASK_LOGIN_SECRET_KEY
 socketio = SocketIO(app, cors_allowed_origins=[site_url])
+app.config.update(SESSION_COOKIE_HTTPONLY=settings.FLASK_SESSION_COOKIE_HTTPONLY)
 
 # import here to avoid circular imports. Not a great practice, but docs say it's okay
 import rockr.views

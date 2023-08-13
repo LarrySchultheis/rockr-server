@@ -8,5 +8,5 @@ class UserMatch(SerializerMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     match_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
-    accepted = db.Column(db.Boolean, nullable=False)
-    seen = db.Column(db.Boolean, nullable=False)
+    accepted = db.Column(db.Boolean, default=False, nullable=False)
+    seen = db.Column(db.Boolean, default=False, nullable=False)

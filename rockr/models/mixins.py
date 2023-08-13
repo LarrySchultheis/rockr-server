@@ -8,9 +8,6 @@ class SerializerMixin:
         as_dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         return as_dict
 
-    def deserialize(self, **kwargs):
-        return json.loads(**kwargs)
-
     def update(self, **kwargs):
         for k, v in kwargs.items():
             if hasattr(self, k):
